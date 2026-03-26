@@ -1,5 +1,6 @@
 package geoinfo.server;
 
+import geoinfo.server.handler.ClientHandler;
 import java.io.IOException;
 import java.net.ServerSocket;
 import java.net.Socket;

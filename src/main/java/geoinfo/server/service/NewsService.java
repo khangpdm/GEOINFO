@@ -1,4 +1,4 @@
-package geoinfo.service;
+package geoinfo.server.service;
 
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
