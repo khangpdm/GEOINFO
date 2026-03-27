@@ -33,7 +33,7 @@ public class Client extends Application {
         MButton title = new MButton("Geographic Information System", "/images/logo/globe.png", 22, 22);
         title.getStyleClass().add("m-button-title");
         header.setBackground(Configure.PRIMARY_BACKGROUND);
-        header.setPadding(new Insets(10,20,10,20));
+        header.setPadding(new Insets(10, 20, 10, 20));
         header.getChildren().add(title);
         // ================ END HEADER ===============
 
@@ -56,7 +56,7 @@ public class Client extends Application {
         Scene scene = new Scene(mainLayout, 1300, 700);
         scene.getStylesheets().add(getClass().getResource("/utils/Configure.css").toExternalForm());
         stage.setScene(scene);
-        stage.setTitle("Geo Ìnfo");
+        stage.setTitle("Geo Info");
         stage.show();
         // ============= END MAIN LAYOUT =============
 

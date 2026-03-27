@@ -12,7 +12,7 @@ import java.io.PrintWriter;
 public class DataProcessor {
     public static void processData(String input, PrintWriter writer) {
         if (input.toLowerCase().startsWith("country:")) {
-            String  datnuoc = input.substring("country:".length()).trim();
+            String datnuoc = input.substring("country:".length()).trim();
             String output = CountryService.getCountryInfo(datnuoc);
             writer.println(output);
         } else if (input.toLowerCase().startsWith("city:")) {
