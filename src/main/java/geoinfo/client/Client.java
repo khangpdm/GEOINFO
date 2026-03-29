@@ -1,7 +1,8 @@
 package geoinfo.client;
 
 import geoinfo.client.gui.components.MButton;
-import geoinfo.client.gui.utils.Configure;
+import geoinfo.client.gui.utils.*;
+import geoinfo.client.gui.pages.*;
 import geoinfo.client.network.ClientService;
 import javafx.application.Application;
 import javafx.geometry.Insets;
@@ -18,6 +19,8 @@ public class Client extends Application {
     private HBox header, toolBar;
     private VBox leftMenu;
     private BorderPane content;
+    private SearchEnginePage searchEnginePage;
+    private MapSearchPage mapSearchPage;
 
 
     @Override
@@ -28,6 +31,8 @@ public class Client extends Application {
         toolBar = new HBox();
         leftMenu = new VBox();
         content = new BorderPane();
+        searchEnginePage = new SearchEnginePage();
+        mapSearchPage = new MapSearchPage();
 
         // ================== HEADER =================
         MButton title = new MButton("Geographic Information System", "/images/logo/globe.png", 22, 22);
@@ -45,9 +50,25 @@ public class Client extends Application {
 
 
         // ================ LEFT MENU ================
+        MButton btnSearchPage = new MButton("Search Engine", "");
+        MButton btnMapPage = new MButton("Map Search", "");
 
+        leftMenu.setSpacing(10);
+        leftMenu.setPadding(new Insets(15));
+        leftMenu.getChildren().addAll(btnSearchPage, btnMapPage);
+        leftMenu.setPrefWidth(Consts.APP_DEFAULT_WIDTH - Consts.CONTENT_DEFAULT_WIDTH);
+        leftMenu.setBackground(Configure.SECONDARY_BACKGROUND);
 
+        // CHUYỂN TRANG
+        btnSearchPage.setOnAction(e -> content.setCenter(searchEnginePage));
+        btnMapPage.setOnAction(e -> content.setCenter(mapSearchPage));
         // ============== END LEFT MENU ==============
+
+
+        // ================= CONTENT =================
+        content.setCenter(searchEnginePage);
+        // =============== END CONTENT ===============
+
 
         // =============== MAIN LAYOUT ===============
         mainLayout.setTop(header);
