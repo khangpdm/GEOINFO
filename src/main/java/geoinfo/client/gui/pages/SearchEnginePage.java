@@ -1,8 +1,11 @@
 package geoinfo.client.gui.pages;
 
+import geoinfo.server.handler.ClientHandler;
+import geoinfo.server.processor.DataProcessor;
 import geoinfo.client.gui.utils.*;
 import javafx.geometry.Insets;
 import javafx.scene.control.ComboBox;
+import javafx.scene.control.Label;
 import javafx.scene.control.TextArea;
 import javafx.scene.control.TextField;
 import javafx.scene.image.Image;
@@ -17,6 +20,7 @@ public class SearchEnginePage extends BorderPane {
 
     private TextField txtSearch;
     private ComboBox<String> cbbType;
+    private BorderPane pnlContent;
     private TextArea resultArea;
     private ImageView searchIcon;
 
@@ -64,19 +68,25 @@ public class SearchEnginePage extends BorderPane {
             }
         });
 
+
+        pnlContent = new BorderPane();
+
         resultArea = new TextArea();
         resultArea.setEditable(false);
         resultArea.setWrapText(true);
-        resultArea.setPromptText("Search result will be displayed here...");
+        resultArea.setStyle(
+                "-fx-background-color: -fx-control-inner-background; " +
+                "-fx-focus-color: transparent; " +
+                "-fx-faint-focus-color: transparent; " +
+                "-fx-background-insets: 0; " +
+                "-fx-background-radius: 0;"
+        );
     }
 
     private void buildLayout() {
         // ================ SEARCH BAR ===============
-        // ===== Search Icon =====
         searchIcon.setPickOnBounds(true);
         searchIcon.setOnMouseClicked(e -> search());
-
-        // ===== Search Box =====
         HBox searchBox = new HBox(0);
         searchBox.setStyle(
             "-fx-background-color: black;" +
@@ -85,29 +95,32 @@ public class SearchEnginePage extends BorderPane {
             "-fx-padding: 0 3;" +
             "-fx-background-radius: 14;"
         );
-
         HBox.setHgrow(txtSearch, Priority.ALWAYS);
         StackPane iconWrapper = new StackPane(searchIcon);
         iconWrapper.setMinWidth(Consts.SEARCHBAR_ITEM_HEIGHT);
         iconWrapper.setPrefWidth(Consts.SEARCHBAR_ITEM_HEIGHT);
-
         searchBox.getChildren().addAll(iconWrapper, txtSearch);
 
-        // ===== Search Bar =====
         HBox searchBar = new HBox(10);
-        searchBar.setPadding(new Insets(15));
+        searchBar.setPadding(new Insets(0, 15, 0, 15));
         searchBar.getChildren().addAll(searchBox, cbbType);
-
         HBox.setHgrow(searchBox, Priority.ALWAYS);
         // ============== END SEARCH BAR =============
 
         // ================= CONTENT =================
-        BorderPane.setMargin(resultArea, new Insets(15));
+        BorderPane.setMargin(pnlContent, new Insets(10 ,15,50,15));
+        Label lblContent = new Label("Searched Information Results");
+        lblContent.setFont(Configure.FONT_TITLE_SEARCH_CONTENT);
+        lblContent.setPadding(new Insets(0, 0, 15, 0));
+        pnlContent.setTop(lblContent);
+
+
+        pnlContent.setCenter(resultArea);
         // =============== END CONTENT ===============
 
         this.setTop(searchBar);
         this.setStyle("-fx-background-color: white;");
-        this.setCenter(resultArea);
+        this.setCenter(pnlContent);
     }
 
     private void search() {
@@ -115,5 +128,17 @@ public class SearchEnginePage extends BorderPane {
         String type = cbbType.getValue();
         // tést thử chức năng
         resultArea.setText("Searching " + type + ": " + keyword);
+    }
+
+    public void setResult(String result){
+        resultArea.setText(result);
+    }
+
+    public void appendResult(String result){
+        resultArea.appendText(result);
+    }
+
+    public void clearResult(){
+        resultArea.clear();
     }
 }

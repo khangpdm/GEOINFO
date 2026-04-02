@@ -16,7 +16,7 @@ public class Client extends Application {
     private ClientService clientService;
 
     private BorderPane mainLayout;
-    private HBox header, toolBar;
+    private HBox header;
     private VBox leftMenu;
     private BorderPane content;
     private SearchEnginePage searchEnginePage;
@@ -28,7 +28,6 @@ public class Client extends Application {
         clientService = new ClientService("localhost", 12345);
         mainLayout = new BorderPane();
         header = new HBox();
-        toolBar = new HBox();
         leftMenu = new VBox();
         content = new BorderPane();
         searchEnginePage = new SearchEnginePage();
@@ -43,23 +42,16 @@ public class Client extends Application {
         // ================ END HEADER ===============
 
 
-        // ================= CONTENT =================
-        toolBar.setBackground(Configure.SECONDARY_BACKGROUND);
-        content.setTop(toolBar);
-        // =============== END CONTENT ===============
-
-
         // ================ LEFT MENU ================
         MButton btnSearchPage = new MButton("Search Engine", "");
         MButton btnMapPage = new MButton("Map Search", "");
 
         leftMenu.setSpacing(10);
-        leftMenu.setPadding(new Insets(15));
+        leftMenu.setPadding(new Insets(50, 20, 50 ,40));
         leftMenu.getChildren().addAll(btnSearchPage, btnMapPage);
         leftMenu.setPrefWidth(Consts.APP_DEFAULT_WIDTH - Consts.CONTENT_DEFAULT_WIDTH);
         leftMenu.setBackground(Configure.SECONDARY_BACKGROUND);
 
-        // CHUYỂN TRANG
         btnSearchPage.setOnAction(e -> content.setCenter(searchEnginePage));
         btnMapPage.setOnAction(e -> content.setCenter(mapSearchPage));
         // ============== END LEFT MENU ==============
@@ -67,6 +59,7 @@ public class Client extends Application {
 
         // ================= CONTENT =================
         content.setCenter(searchEnginePage);
+        content.setPadding(new Insets(50, 40, 50 ,20));
         // =============== END CONTENT ===============
 
 
@@ -74,6 +67,7 @@ public class Client extends Application {
         mainLayout.setTop(header);
         mainLayout.setCenter(content);
         mainLayout.setLeft(leftMenu);
+        mainLayout.setBackground(Configure.SECONDARY_BACKGROUND);
         Scene scene = new Scene(mainLayout, 1300, 700);
         scene.getStylesheets().add(getClass().getResource("/utils/Configure.css").toExternalForm());
         stage.setScene(scene);
@@ -87,11 +81,10 @@ public class Client extends Application {
         mainLayout.getChildren().add(text);
         Button btn = new Button("Connect");
         mainLayout.getChildren().add(btn);
-
-        btn.setOnAction(e -> {
-            text.setText("Đang kết nối...");
-            new Thread(() -> {clientService.start();}).start();
-        });
+        if (!clientService.connect()) {
+            searchEnginePage.appendResult("Không thể kết nối server!");
+        }
+        searchEnginePage.appendResult("đã kết nối server!");
     }
 
     public static void main(String[] args) {
