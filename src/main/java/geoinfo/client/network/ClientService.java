@@ -23,7 +23,7 @@ public class ClientService {
             writer = new PrintWriter(new OutputStreamWriter(socket.getOutputStream()), true);
             return true;
         } catch (IOException e) {
-            System.out.println("Lỗi kết nối: " + e.getMessage());
+            System.out.println("Connection error: " + e.getMessage());
             return false;
         }
     }
@@ -35,7 +35,6 @@ public class ClientService {
 
         try {
             writer.println(message);
-
             StringBuilder response = new StringBuilder();
             String line;
 
@@ -43,7 +42,6 @@ public class ClientService {
                 if (line.equals("<END>")) break;
                 response.append(line).append("\n");
             }
-
             return response.toString();
 
         } catch (IOException e) {

@@ -7,14 +7,11 @@ import geoinfo.client.network.ClientService;
 import javafx.application.Application;
 import javafx.geometry.Insets;
 import javafx.scene.Scene;
-import javafx.scene.control.Button;
 import javafx.scene.layout.*;
-import javafx.scene.text.Text;
 import javafx.stage.Stage;
 
 public class Client extends Application {
     private ClientService clientService;
-
     private BorderPane mainLayout;
     private HBox header;
     private VBox leftMenu;
@@ -22,16 +19,15 @@ public class Client extends Application {
     private SearchEnginePage searchEnginePage;
     private MapSearchPage mapSearchPage;
 
-
     @Override
     public void start(Stage stage) {
         clientService = new ClientService("localhost", 12345);
+        searchEnginePage = new SearchEnginePage(clientService);
+        mapSearchPage = new MapSearchPage(); // them clientService vao sau
         mainLayout = new BorderPane();
         header = new HBox();
         leftMenu = new VBox();
         content = new BorderPane();
-        searchEnginePage = new SearchEnginePage();
-        mapSearchPage = new MapSearchPage();
 
         // ================== HEADER =================
         MButton title = new MButton("Geographic Information System", "/images/logo/globe.png", 22, 22);
@@ -40,7 +36,6 @@ public class Client extends Application {
         header.setPadding(new Insets(10, 20, 10, 20));
         header.getChildren().add(title);
         // ================ END HEADER ===============
-
 
         // ================ LEFT MENU ================
         MButton btnSearchPage = new MButton("Search Engine", "");
@@ -56,12 +51,10 @@ public class Client extends Application {
         btnMapPage.setOnAction(e -> content.setCenter(mapSearchPage));
         // ============== END LEFT MENU ==============
 
-
         // ================= CONTENT =================
         content.setCenter(searchEnginePage);
         content.setPadding(new Insets(50, 40, 50 ,20));
         // =============== END CONTENT ===============
-
 
         // =============== MAIN LAYOUT ===============
         mainLayout.setTop(header);
@@ -75,16 +68,18 @@ public class Client extends Application {
         stage.show();
         // ============= END MAIN LAYOUT =============
 
-
-
-        Text text = new Text("Chưa kết nối");
-        mainLayout.getChildren().add(text);
-        Button btn = new Button("Connect");
-        mainLayout.getChildren().add(btn);
         if (!clientService.connect()) {
-            searchEnginePage.appendResult("Không thể kết nối server!");
+            searchEnginePage.setResult("Unable to connect to server!\n");
+        } else {
+            searchEnginePage.setResult("Server connected!\n");
         }
-        searchEnginePage.appendResult("đã kết nối server!");
+    }
+
+    @Override
+    public void stop() {
+        if (clientService != null) {
+            clientService.disconnect();
+        }
     }
 
     public static void main(String[] args) {

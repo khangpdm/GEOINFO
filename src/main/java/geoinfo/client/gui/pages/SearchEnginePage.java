@@ -1,7 +1,6 @@
 package geoinfo.client.gui.pages;
 
-import geoinfo.server.handler.ClientHandler;
-import geoinfo.server.processor.DataProcessor;
+import geoinfo.client.network.ClientService;
 import geoinfo.client.gui.utils.*;
 import javafx.geometry.Insets;
 import javafx.scene.control.ComboBox;
@@ -23,10 +22,12 @@ public class SearchEnginePage extends BorderPane {
     private BorderPane pnlContent;
     private TextArea resultArea;
     private ImageView searchIcon;
+    private ClientService clientService;
 
-    public SearchEnginePage() {
+    public SearchEnginePage(ClientService clientService) {
         initComponents();
         buildLayout();
+        this.clientService = clientService;
     }
 
     private void initComponents() {
@@ -42,6 +43,7 @@ public class SearchEnginePage extends BorderPane {
             "-fx-background-insets: 0;" +
             "-fx-border-width: 0;"
         );
+        txtSearch.setOnAction(e -> search());
 
         searchIcon = new ImageView(new Image(getClass().getResourceAsStream("/images/icons/search_white.png")));
         searchIcon.setFitWidth(Consts.SEARCHBAR_ITEM_HEIGHT - 10);
@@ -53,11 +55,11 @@ public class SearchEnginePage extends BorderPane {
         cbbType.setPrefHeight(Consts.SEARCHBAR_ITEM_HEIGHT);
         cbbType.setStyle(
                 "-fx-background-color: black;" +
-                        "-fx-border-color: #00AEEF;" +
-                        "-fx-border-radius: 10;" +
-                        "-fx-background-radius: 10;" +
-                        "-fx-padding: 4 10;" +
-                        "-fx-font-size: 12px;"
+                "-fx-border-color: #00AEEF;" +
+                "-fx-border-radius: 10;" +
+                "-fx-background-radius: 10;" +
+                "-fx-padding: 4 10;" +
+                "-fx-font-size: 12px;"
         );
         cbbType.setButtonCell(new javafx.scene.control.ListCell<>() {
             @Override
@@ -67,7 +69,6 @@ public class SearchEnginePage extends BorderPane {
                 setStyle("-fx-text-fill: white; -fx-background-color: black;");
             }
         });
-
 
         pnlContent = new BorderPane();
 
@@ -114,7 +115,6 @@ public class SearchEnginePage extends BorderPane {
         lblContent.setPadding(new Insets(0, 0, 15, 0));
         pnlContent.setTop(lblContent);
 
-
         pnlContent.setCenter(resultArea);
         // =============== END CONTENT ===============
 
@@ -124,18 +124,21 @@ public class SearchEnginePage extends BorderPane {
     }
 
     private void search() {
-        String keyword = txtSearch.getText();
+        String keyword = txtSearch.getText().trim();
         String type = cbbType.getValue();
-        // tést thử chức năng
-        resultArea.setText("Searching " + type + ": " + keyword);
+
+        if (keyword.isEmpty()) {
+            resultArea.setText("No results found. Try a different search term.");
+            return;
+        }
+
+        String request = type.toLowerCase() + " " + keyword;
+        String response = clientService.sendRequest(request);
+        resultArea.setText(response);
     }
 
     public void setResult(String result){
         resultArea.setText(result);
-    }
-
-    public void appendResult(String result){
-        resultArea.appendText(result);
     }
 
     public void clearResult(){
