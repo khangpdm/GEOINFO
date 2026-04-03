@@ -5,6 +5,8 @@ import javafx.scene.control.ContentDisplay;
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
 
+import java.io.InputStream;
+
 public class MButton extends Button {
 
     public MButton(String text, String iconPath, int iconWidth, int iconHeight) {
@@ -20,13 +22,18 @@ public class MButton extends Button {
         }
     }
 
-    private ImageView createIcon(String path, int width, int height ) {
-        Image image = new Image(getClass().getResourceAsStream(path));
-        ImageView imageView = new ImageView(image);
+    private ImageView createIcon(String path, int width, int height) {
+        String iconPath = (path != null && path.startsWith("/")) ? path : "/" + path;
+        InputStream is = getClass().getResourceAsStream(iconPath);
 
-        imageView.setFitWidth(width);
-        imageView.setFitHeight(height);
+        if (is == null) {
+            return new ImageView();
+        }
 
-        return imageView;
+        ImageView icon = new ImageView(new Image(is));
+        icon.setFitWidth(width);
+        icon.setFitHeight(height);
+        icon.setPreserveRatio(true);
+        return icon;
     }
 }
