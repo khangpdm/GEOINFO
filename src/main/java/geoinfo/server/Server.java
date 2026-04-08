@@ -20,7 +20,7 @@ public class Server {
                 ClientHandler.handleClient(socket);
             }
         } catch (IOException e) {
-            System.out.println("Lỗi khởi tạo " + e.getMessage());
+            System.out.println("Lỗi khởi tạo: " + e.getMessage());
         }
     }
 

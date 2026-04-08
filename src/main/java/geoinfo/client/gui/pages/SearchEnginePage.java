@@ -132,7 +132,8 @@ public class SearchEnginePage extends BorderPane {
             return;
         }
 
-        String request = type.toLowerCase() + " " + keyword;
+        //String request = type.toLowerCase() + " " + keyword;
+        String request = type.toLowerCase() + ":" + keyword;
         String response = clientService.sendRequest(request);
         resultArea.setText(response);
     }
