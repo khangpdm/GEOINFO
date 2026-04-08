@@ -32,4 +32,19 @@ public class ApiConnector {
         String body = connection.execute().body();
         return new JSONObject(body);
     }
+
+    public static String getJsonText(String url, Map<String, String> headers) throws IOException {
+        Connection connection = Jsoup.connect(url.trim())
+                .method(Connection.Method.GET)
+                .ignoreContentType(true);
+
+        if (headers != null) {
+            for (Map.Entry<String, String> entry : headers.entrySet()) {
+                connection.header(entry.getKey(), entry.getValue());
+            }
+        }
+
+        return connection.execute().body();
+    }
+    
 }

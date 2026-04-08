@@ -4,6 +4,9 @@ import geoinfo.server.service.CityService;
 import geoinfo.server.service.CountryService;
 
 public class DataProcessor {
+    private static final String COUNTRY_NOT_FOUND_PREFIX =
+            "Lỗi khi lấy dữ liệu quốc gia: không tìm thấy quốc gia phù hợp.";
+
     public static String processData(String input) {
         if (input == null || input.isBlank()) {
             return "Dữ liệu rỗng.";
@@ -27,32 +30,10 @@ public class DataProcessor {
         }
 
         String countryResult = CountryService.getCountryInfo(normalizedInput);
-        if (!countryResult.startsWith("Lỗi khi lấy dữ liệu quốc gia: không tìm thấy quốc gia phù hợp.")) {
+        if (!countryResult.startsWith(COUNTRY_NOT_FOUND_PREFIX)) {
             return countryResult;
         }
 
         return CityService.getCityInfo(normalizedInput);
     }
 }
-
-
-//import geoinfo.server.service.CityService;
-//import geoinfo.server.service.CountryService;
-//import java.io.PrintWriter;
-//
-//public class DataProcessor {
-//    public static void processData(String input, PrintWriter writer) {
-//        if (input.toLowerCase().startsWith("country:")) {
-//            String datnuoc = input.substring("country:".length()).trim();
-//            String output = CountryService.getCountryInfo(datnuoc);
-//            writer.println(output);
-//        } else if (input.toLowerCase().startsWith("city:")) {
-//            String thanhpho = input.substring("city:".length()).trim();
-//            String output = CityService.getCityInfo(thanhpho);
-//            writer.println(output);
-//        } else {
-//            writer.println("Không xác định được loại dữ liệu. Vui lòng nhập 'country:<tên>' hoặc 'city:<tên>'.");
-//        }
-//
-//    }
-//}

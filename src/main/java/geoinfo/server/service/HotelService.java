@@ -95,8 +95,7 @@ public class HotelService {
                 + "?name=" + URLEncoder.encode(cityName.trim(), StandardCharsets.UTF_8)
                 + "&locale=en-gb";
 
-        JSONObject response = sendGetRequest(url);
-        JSONArray data = extractArray(response, "result", "data");
+        JSONArray data = sendGetRequestArray(url);
         if (data == null || data.isEmpty()) {
             return null;
         }
@@ -107,7 +106,9 @@ public class HotelService {
                 continue;
             }
 
-            String destType = normalizeDestType(firstNonBlank(item.optString("dest_type"), item.optString("destType")));
+            String destType = normalizeDestType(
+                    firstNonBlank(item.optString("dest_type"), item.optString("destType"))
+            );
             if ("city".equals(destType)) {
                 return item;
             }
@@ -131,11 +132,17 @@ public class HotelService {
                 + "&page_number=0"
                 + "&include_adjacency=true";
 
-        return sendGetRequest(url);
+        return sendGetRequestObject(url);
     }
 
-    private static JSONObject sendGetRequest(String url) throws Exception {
-        return ApiConnector.getJson(url, API_HEADERS);
+    private static JSONObject sendGetRequestObject(String url) throws Exception {
+        String body = ApiConnector.getJsonText(url, API_HEADERS);
+        return new JSONObject(body);
+    }
+
+    private static JSONArray sendGetRequestArray(String url) throws Exception {
+        String body = ApiConnector.getJsonText(url, API_HEADERS);
+        return new JSONArray(body);
     }
 
     private static String formatHotelItem(JSONObject hotel, int index) {
@@ -259,16 +266,6 @@ public class HotelService {
         return firstNonBlank(hotel.optString("class_is_estimated"));
     }
 
-    private static JSONArray extractArray(JSONObject json, String... keys) {
-        for (String key : keys) {
-            JSONArray array = json.optJSONArray(key);
-            if (array != null) {
-                return array;
-            }
-        }
-        return null;
-    }
-
     private static String normalizeDestType(String value) {
         if (value == null || value.isBlank()) {
             return "city";
@@ -330,7 +327,7 @@ public class HotelService {
                     + "&page_number=0"
                     + "&sort_type=SORT_MOST_RELEVANT";
 
-            JSONObject response = sendGetRequest(url);
+            JSONObject response = sendGetRequestObject(url);
             JSONArray reviews = extractReviews(response);
 
             if (reviews == null || reviews.isEmpty()) {
