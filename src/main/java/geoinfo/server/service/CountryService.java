@@ -15,19 +15,37 @@ public class CountryService {
 
     public static String getCountryInfo(String input) {
         try {
-            if (input == null || input.isBlank()) {
+            if (input == null) {
                 return "Lỗi khi lấy dữ liệu quốc gia: dữ liệu đầu vào rỗng.";
+            }
+
+            input = input.replaceAll("\\s+", " ").trim();
+
+            if (input.isEmpty()) {
+                return "Lỗi khi lấy dữ liệu quốc gia: dữ liệu đầu vào rỗng.";
+            }
+
+            if (input.length() < 2) {
+                return "Lỗi khi lấy dữ liệu quốc gia: tên quốc gia quá ngắn.";
+            }
+
+            if (input.length() > 100) {
+                return "Lỗi khi lấy dữ liệu quốc gia: tên quốc gia quá dài.";
+            }
+
+            if (!input.matches("[\\p{L}\\p{M}0-9 .,'()\\-]+")) {
+                return "Lỗi khi lấy dữ liệu quốc gia: tên quốc gia chứa ký tự không hợp lệ.";
             }
 
             ensureCountriesLoaded();
 
-            JSONObject json = findCountry(input.trim());
+            JSONObject json = findCountry(input);
             if (json == null) {
                 return "Lỗi khi lấy dữ liệu quốc gia: không tìm thấy quốc gia phù hợp.";
             }
 
             JSONObject nameObj = json.optJSONObject("name");
-            String commonName = nameObj == null ? input.trim() : nameObj.optString("common", input.trim());
+            String commonName = nameObj == null ? input : nameObj.optString("common", input);
             String cca2 = json.optString("cca2", "");
 
             JSONArray latlngArr = json.optJSONArray("latlng");
@@ -171,8 +189,9 @@ public class CountryService {
                 }
             }
 
-            if (partialMatch == null
-                    && (commonName.contains(normalizedKeyword) || officialName.contains(normalizedKeyword))) {
+            if (partialMatch == null && normalizedKeyword.length() >= 4
+                    && (commonName.startsWith(normalizedKeyword)
+                    || officialName.startsWith(normalizedKeyword))) {
                 partialMatch = country;
             }
         }

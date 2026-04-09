@@ -21,11 +21,17 @@ public class DataProcessor {
 
         if (lowerInput.startsWith("country:")) {
             String country = normalizedInput.substring("country:".length()).trim();
+            if (country.isEmpty()) {
+                return "Vui lòng nhập tên quốc gia.";
+            }
             return CountryService.getCountryInfo(country);
         }
 
         if (lowerInput.startsWith("city:")) {
             String city = normalizedInput.substring("city:".length()).trim();
+            if (city.isEmpty()) {
+                return "Vui lòng nhập tên thành phố.";
+            }
             return CityService.getCityInfo(city);
         }
 

@@ -8,14 +8,33 @@ import org.jsoup.nodes.Document;
 import java.io.IOException;
 import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
+import java.text.Normalizer;
 
 public class CityService {
     private static final String WEATHER_API_KEY = "a7a0ef458a3642009a580805262003";
     private static final String GEONAMES_USERNAME = "tinmi2005";
 
     public static String getCityInfo(String input) {
-        if (input == null || input.isBlank()) {
+        if (input == null) {
             return "Lỗi khi lấy dữ liệu thành phố: dữ liệu đầu vào rỗng.";
+        }
+
+        input = input.replaceAll("\\s+", " ").trim();
+
+        if (input.isEmpty()) {
+            return "Lỗi khi lấy dữ liệu thành phố: dữ liệu đầu vào rỗng.";
+        }
+
+        if (input.length() < 2) {
+            return "Lỗi khi lấy dữ liệu thành phố: tên thành phố quá ngắn.";
+        }
+
+        if (input.length() > 100) {
+            return "Lỗi khi lấy dữ liệu thành phố: tên thành phố quá dài.";
+        }
+
+        if (!input.matches("[\\p{L}\\p{M}0-9 .,'()\\-]+")) {
+            return "Lỗi khi lấy dữ liệu thành phố: tên thành phố chứa ký tự không hợp lệ.";
         }
 
         String url = "https://api.weatherapi.com/v1/current.json?key="
@@ -29,6 +48,9 @@ public class CityService {
 
             JSONObject location = json.getJSONObject("location");
             String name = location.getString("name");
+            if (!isReasonablySameCity(input, name)) {
+                return "Lỗi khi lấy dữ liệu thành phố: không tìm thấy thành phố phù hợp.";
+            }
             String region = location.getString("region");
             String country = location.getString("country");
             double lat = location.getDouble("lat");
@@ -68,7 +90,13 @@ public class CityService {
     }
 
     public static String getWeatherSummary(String query) {
-        if (query == null || query.isBlank()) {
+        if (query == null) {
+            return "Chưa có dữ liệu thời tiết.";
+        }
+
+        query = query.replaceAll("\\s+", " ").trim();
+
+        if (query.isEmpty()) {
             return "Chưa có dữ liệu thời tiết.";
         }
 
@@ -118,5 +146,28 @@ public class CityService {
         } catch (Exception e) {
             return "Chưa có dữ liệu";
         }
+    }
+
+    private static String normalizeName(String value) {
+        if (value == null) {
+            return "";
+        }
+
+        String normalized = Normalizer.normalize(value, Normalizer.Form.NFD)
+                .replaceAll("\\p{M}+", "")
+                .replace('đ', 'd')
+                .replace('Đ', 'D');
+
+        return normalized.toLowerCase()
+                .replaceAll("[^\\p{L}0-9 ]", " ")
+                .replaceAll("\\s+", " ")
+                .trim();
+    }
+
+    private static boolean isReasonablySameCity(String input, String resolvedName) {
+        String a = normalizeName(input);
+        String b = normalizeName(resolvedName);
+
+        return a.equals(b) || a.contains(b) || b.contains(a);
     }
 }
