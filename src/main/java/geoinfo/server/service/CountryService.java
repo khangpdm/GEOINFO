@@ -10,7 +10,7 @@ import java.util.Scanner;
 
 public class CountryService {
     private static final String ALL_COUNTRIES_URL =
-            "https://restcountries.com/v3.1/all?fields=name,capital,altSpellings,cca2,cca3,latlng,population,currencies,languages,flag,borders";
+            "https://restcountries.com/v3.1/all?fields=name,capital,altSpellings,cca2,cca3,latlng,population,currencies,languages,borders";
     private static JSONArray countriesCache;
 
     public static String getCountryInfo(String input) {
@@ -35,7 +35,6 @@ public class CountryService {
             String population = String.valueOf(json.optLong("population", 0));
             String currencies = buildCurrencies(json.optJSONObject("currencies"));
             String languages = buildLanguages(json.optJSONObject("languages"));
-            String flag = json.optString("flag", "Không có");
             String borders = formatBorders(json.optJSONArray("borders"));
             String weather = CityService.getWeatherSummary(getCapitalOrCountryName(json, commonName));
             String news = NewsService.getNewsInfo(commonName);
@@ -47,7 +46,6 @@ public class CountryService {
                     + "Dân số: " + population + "\n"
                     + "Đơn vị tiền tệ: " + currencies + "\n"
                     + "Ngôn ngữ: " + languages + "\n"
-                    + "Quốc kỳ: " + flag + "\n"
                     + "Quốc gia láng giềng: " + borders + "\n"
                     + "Thời tiết hiện tại: " + weather + "\n"
                     + "===============================================\n"

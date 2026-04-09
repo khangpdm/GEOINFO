@@ -1,7 +1,8 @@
 package geoinfo.client.gui.pages;
 
+import geoinfo.client.gui.utils.Configure;
+import geoinfo.client.gui.utils.Consts;
 import geoinfo.client.network.ClientService;
-import geoinfo.client.gui.utils.*;
 import javafx.geometry.Insets;
 import javafx.scene.control.ComboBox;
 import javafx.scene.control.Label;
@@ -13,7 +14,6 @@ import javafx.scene.layout.BorderPane;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.Priority;
 import javafx.scene.layout.StackPane;
-
 
 public class SearchEnginePage extends BorderPane {
 
@@ -85,7 +85,6 @@ public class SearchEnginePage extends BorderPane {
     }
 
     private void buildLayout() {
-        // ================ SEARCH BAR ===============
         searchIcon.setPickOnBounds(true);
         searchIcon.setOnMouseClicked(e -> search());
         HBox searchBox = new HBox(0);
@@ -106,17 +105,13 @@ public class SearchEnginePage extends BorderPane {
         searchBar.setPadding(new Insets(0, 15, 0, 15));
         searchBar.getChildren().addAll(searchBox, cbbType);
         HBox.setHgrow(searchBox, Priority.ALWAYS);
-        // ============== END SEARCH BAR =============
 
-        // ================= CONTENT =================
-        BorderPane.setMargin(pnlContent, new Insets(10 ,15,50,15));
+        BorderPane.setMargin(pnlContent, new Insets(10, 15, 50, 15));
         Label lblContent = new Label("Searched Information Results");
         lblContent.setFont(Configure.FONT_TITLE_SEARCH_CONTENT);
         lblContent.setPadding(new Insets(0, 0, 15, 0));
         pnlContent.setTop(lblContent);
-
         pnlContent.setCenter(resultArea);
-        // =============== END CONTENT ===============
 
         this.setTop(searchBar);
         this.setStyle("-fx-background-color: white;");
@@ -137,11 +132,11 @@ public class SearchEnginePage extends BorderPane {
         resultArea.setText(response);
     }
 
-    public void setResult(String result){
+    public void setResult(String result) {
         resultArea.setText(result);
     }
 
-    public void clearResult(){
+    public void clearResult() {
         resultArea.clear();
     }
 }

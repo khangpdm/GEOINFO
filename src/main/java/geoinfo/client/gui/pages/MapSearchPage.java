@@ -18,6 +18,7 @@ import java.io.File;
 public class MapSearchPage extends BorderPane {
     private Label mapTooltip;
     private Group map;
+    private Pane mapContainer;
 
     public MapSearchPage(){
         initComponents();
@@ -49,13 +50,12 @@ public class MapSearchPage extends BorderPane {
                 mapTooltip.setVisible(true);
             });
             svgPath.setOnMouseMoved(e -> {
-                // Lấy tọa độ chuột so với cái Pane gốc (root)
-                double mouseX = e.getSceneX();
-                double mouseY = e.getSceneY();
+                // Chuyển đổi tọa độ chuột từ Scene sang hệ tọa độ cục bộ của mapContainer
+                javafx.geometry.Point2D localMouse = mapContainer.sceneToLocal(e.getSceneX(), e.getSceneY());
 
-                // Đặt vị trí Tooltip hơi lệch so với con trỏ chuột một chút để không che mất
-                mapTooltip.setLayoutX(mouseX + 15);
-                mapTooltip.setLayoutY(mouseY + 15);
+                // Đặt vị trí Tooltip lệch 15px so với con trỏ chuột
+                mapTooltip.setLayoutX(localMouse.getX() + 15);
+                mapTooltip.setLayoutY(localMouse.getY() + 15);
             });
 
             // 3. Khi chuột đi RA KHỎI quốc gia
@@ -165,7 +165,7 @@ public class MapSearchPage extends BorderPane {
     }
 
     private void buildLayout() {
-        Pane mapContainer = new Pane();
+        mapContainer = new Pane();
         mapContainer.getChildren().add(map);
         mapContainer.getChildren().add(mapTooltip);
 

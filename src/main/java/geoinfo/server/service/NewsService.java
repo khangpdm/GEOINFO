@@ -34,6 +34,7 @@ public class NewsService {
                 String link = item.getElementsByTagName("link").item(0).getTextContent();
                 String pubDate = item.getElementsByTagName("pubDate").item(0).getTextContent();
 
+
                 output.append("- ").append(title).append("\n")
                         .append("  Link: ").append(link).append("\n")
                         .append("  Ngày: ").append(pubDate).append("\n");

@@ -4,6 +4,9 @@ import geoinfo.server.service.CityService;
 import geoinfo.server.service.CountryService;
 
 public class DataProcessor {
+    private static final String COUNTRY_NOT_FOUND_PREFIX =
+            "Lỗi khi lấy dữ liệu quốc gia: không tìm thấy quốc gia phù hợp.";
+
     public static String processData(String input) {
         if (input == null || input.isBlank()) {
             return "Dữ liệu rỗng.";
@@ -27,7 +30,7 @@ public class DataProcessor {
         }
 
         String countryResult = CountryService.getCountryInfo(normalizedInput);
-        if (!countryResult.startsWith("Lỗi khi lấy dữ liệu quốc gia: không tìm thấy quốc gia phù hợp.")) {
+        if (!countryResult.startsWith(COUNTRY_NOT_FOUND_PREFIX)) {
             return countryResult;
         }
 
