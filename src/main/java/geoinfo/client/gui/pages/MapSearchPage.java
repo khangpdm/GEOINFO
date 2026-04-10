@@ -98,13 +98,7 @@ public class MapSearchPage extends BorderPane {
             translateAnchor[0] = content.getTranslateX();
             translateAnchor[1] = content.getTranslateY();
         });
-
-        // 3. Xử lý KÉO (Pan) - Di chuyển chuột
-        container.setOnMouseDragged(event -> {
-            // Tính toán khoảng cách đã di chuyển và cập nhật vị trí mới
-            content.setTranslateX(translateAnchor[0] + event.getSceneX() - mouseAnchor[0]);
-            content.setTranslateY(translateAnchor[1] + event.getSceneY() - mouseAnchor[1]);
-        });
+        
 
         container.setOnMouseDragged(event -> {
             // 1. Tính toán vị trí mới dự kiến dựa trên độ lệch chuột

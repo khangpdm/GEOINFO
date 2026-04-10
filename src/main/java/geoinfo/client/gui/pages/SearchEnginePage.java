@@ -120,6 +120,7 @@ public class SearchEnginePage extends BorderPane {
 
     private void search() {
         String keyword = txtSearch.getText().trim();
+        keyword = keyword.replaceAll("\\s+", " ").trim();
         String type = cbbType.getValue();
 
         if (keyword.isEmpty()) {
@@ -127,7 +128,17 @@ public class SearchEnginePage extends BorderPane {
             return;
         }
 
-        String request = type.toLowerCase() + " " + keyword;
+        if (keyword.length() > 100) {
+            resultArea.setText("Từ khóa quá dài.");
+            return;
+        }
+
+        if (!keyword.matches("[\\p{L}\\p{M}0-9 .,'()-]+")) {
+            resultArea.setText("Từ khóa chứa ký tự không hợp lệ.");
+            return;
+        }
+
+        String request = type.toLowerCase() + ":" + keyword;
         String response = clientService.sendRequest(request);
         resultArea.setText(response);
     }

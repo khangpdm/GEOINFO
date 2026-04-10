@@ -6,6 +6,7 @@ import java.io.InputStreamReader;
 import java.io.OutputStreamWriter;
 import java.io.PrintWriter;
 import java.net.Socket;
+import java.nio.charset.StandardCharsets;
 
 
 public class ClientService {
@@ -23,8 +24,8 @@ public class ClientService {
     public boolean connect() {
         try {
             socket = new Socket(host, port);
-            reader = new BufferedReader(new InputStreamReader(socket.getInputStream()));
-            writer = new PrintWriter(new OutputStreamWriter(socket.getOutputStream()), true);
+            reader = new BufferedReader(new InputStreamReader(socket.getInputStream(), StandardCharsets.UTF_8));
+            writer = new PrintWriter(new OutputStreamWriter(socket.getOutputStream(), StandardCharsets.UTF_8), true);
             return true;
         } catch (IOException e) {
             System.out.println("Connection error: " + e.getMessage());
