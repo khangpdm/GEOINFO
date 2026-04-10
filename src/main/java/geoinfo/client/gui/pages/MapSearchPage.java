@@ -98,7 +98,7 @@ public class MapSearchPage extends BorderPane {
             translateAnchor[0] = content.getTranslateX();
             translateAnchor[1] = content.getTranslateY();
         });
-        
+
 
         container.setOnMouseDragged(event -> {
             // 1. Tính toán vị trí mới dự kiến dựa trên độ lệch chuột
