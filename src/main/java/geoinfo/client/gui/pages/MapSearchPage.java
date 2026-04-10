@@ -184,6 +184,6 @@ public class MapSearchPage extends BorderPane {
         popup.setScene(new Scene(root, 720, 520));
         popup.show();
 
-        searchEnginePage.searchCountryFromMap(countryName, resultArea::setText);
+//        searchEnginePage.searchCountryFromMap(countryName, resultArea::setText);
     }
 }
