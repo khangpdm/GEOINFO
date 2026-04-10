@@ -1,7 +1,8 @@
 package geoinfo.client.gui.pages;
 
+import geoinfo.client.gui.utils.Configure;
+import geoinfo.client.gui.utils.Consts;
 import geoinfo.client.network.ClientService;
-import geoinfo.client.gui.utils.*;
 import javafx.geometry.Insets;
 import javafx.scene.control.ComboBox;
 import javafx.scene.control.Label;
@@ -13,7 +14,8 @@ import javafx.scene.layout.BorderPane;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.Priority;
 import javafx.scene.layout.StackPane;
-
+import javafx.application.Platform;
+import geoinfo.server.utils.ValidationUtils;
 
 public class SearchEnginePage extends BorderPane {
 
@@ -23,6 +25,7 @@ public class SearchEnginePage extends BorderPane {
     private TextArea resultArea;
     private ImageView searchIcon;
     private ClientService clientService;
+    private boolean searching;
 
     public SearchEnginePage(ClientService clientService) {
         initComponents();
@@ -85,7 +88,6 @@ public class SearchEnginePage extends BorderPane {
     }
 
     private void buildLayout() {
-        // ================ SEARCH BAR ===============
         searchIcon.setPickOnBounds(true);
         searchIcon.setOnMouseClicked(e -> search());
         HBox searchBox = new HBox(0);
@@ -106,17 +108,13 @@ public class SearchEnginePage extends BorderPane {
         searchBar.setPadding(new Insets(0, 15, 0, 15));
         searchBar.getChildren().addAll(searchBox, cbbType);
         HBox.setHgrow(searchBox, Priority.ALWAYS);
-        // ============== END SEARCH BAR =============
 
-        // ================= CONTENT =================
-        BorderPane.setMargin(pnlContent, new Insets(10 ,15,50,15));
+        BorderPane.setMargin(pnlContent, new Insets(10, 15, 50, 15));
         Label lblContent = new Label("Searched Information Results");
         lblContent.setFont(Configure.FONT_TITLE_SEARCH_CONTENT);
         lblContent.setPadding(new Insets(0, 0, 15, 0));
         pnlContent.setTop(lblContent);
-
         pnlContent.setCenter(resultArea);
-        // =============== END CONTENT ===============
 
         this.setTop(searchBar);
         this.setStyle("-fx-background-color: white;");
@@ -124,24 +122,69 @@ public class SearchEnginePage extends BorderPane {
     }
 
     private void search() {
-        String keyword = txtSearch.getText().trim();
+        if (searching) {
+            return;
+        }
+
+        String keyword = ValidationUtils.sanitizeInput(txtSearch.getText());
         String type = cbbType.getValue();
 
-        if (keyword.isEmpty()) {
+        if (ValidationUtils.isEmpty(keyword)) {
             resultArea.setText("No results found. Try a different search term.");
             return;
         }
 
-        String request = type.toLowerCase() + " " + keyword;
-        String response = clientService.sendRequest(request);
-        resultArea.setText(response);
+        if (keyword.length() > 100) {
+            resultArea.setText("Từ khóa quá dài.");
+            return;
+        }
+
+        if (!ValidationUtils.isValidLocationName(keyword)) {
+            resultArea.setText("Từ khóa chứa ký tự không hợp lệ.");
+            return;
+        }
+
+        String request = type.toLowerCase() + ":" + keyword;
+        //String response = clientService.sendRequest(request);
+        String loadingMessage = type.equals("City")
+                ? "Dang tim kiem thanh pho..."
+                : "Dang tim kiem quoc gia...";
+
+        setSearchingState(true);
+        resultArea.setText(loadingMessage);
+
+        Thread thread = new Thread(() -> {
+            String response;
+            try {
+                response = clientService.sendRequest(request);
+            } catch (Exception ex) {
+                response = "Loi khi tim kiem: " + ex.getMessage();
+            }
+
+            final String finalResponse = response;
+            Platform.runLater(() -> {
+                resultArea.setText(finalResponse);
+                setSearchingState(false);
+            });
+        });
+
+        //thread.setDaemon(true);
+        thread.setName("SearchThread-" + System.currentTimeMillis());
+        thread.start();;
     }
 
-    public void setResult(String result){
+    private void setSearchingState(boolean searching) {
+        this.searching = searching;
+        txtSearch.setDisable(searching);
+        cbbType.setDisable(searching);
+        searchIcon.setDisable(searching);
+    }
+
+    public void setResult(String result) {
         resultArea.setText(result);
     }
 
-    public void clearResult(){
+    public void clearResult() {
         resultArea.clear();
     }
 }
