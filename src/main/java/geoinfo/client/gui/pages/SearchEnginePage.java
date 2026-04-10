@@ -1,13 +1,12 @@
 package geoinfo.client.gui.pages;
 
+import geoinfo.client.gui.components.SearchResultPane;
 import geoinfo.client.gui.utils.Configure;
 import geoinfo.client.gui.utils.Consts;
 import geoinfo.client.network.ClientService;
-import javafx.application.Platform;
 import javafx.geometry.Insets;
 import javafx.scene.control.ComboBox;
 import javafx.scene.control.Label;
-import javafx.scene.control.TextArea;
 import javafx.scene.control.TextField;
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
@@ -15,24 +14,22 @@ import javafx.scene.layout.BorderPane;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.Priority;
 import javafx.scene.layout.StackPane;
-import geoinfo.server.utils.ValidationUtils;
-
-import java.util.function.Consumer;
+import javafx.scene.layout.VBox;
 
 public class SearchEnginePage extends BorderPane {
+    private final ClientService clientService;
+    private final SearchResultPane resultPane;
 
     private TextField txtSearch;
     private ComboBox<String> cbbType;
     private BorderPane pnlContent;
-    private TextArea resultArea;
     private ImageView searchIcon;
-    private ClientService clientService;
-    private boolean searching;
 
     public SearchEnginePage(ClientService clientService) {
+        this.clientService = clientService;
+        this.resultPane = new SearchResultPane(clientService);
         initComponents();
         buildLayout();
-        this.clientService = clientService;
     }
 
     private void initComponents() {
@@ -40,15 +37,15 @@ public class SearchEnginePage extends BorderPane {
         txtSearch.setPromptText("Nhap tu khoa can tim kiem ... ");
         txtSearch.setPrefHeight(Consts.SEARCHBAR_ITEM_HEIGHT);
         txtSearch.setStyle(
-            "-fx-background-color: black;" +
-            "-fx-text-fill: white;" +
-            "-fx-prompt-text-fill: #888888;" +
-            "-fx-border-color: transparent;" +
-            "-fx-background-radius: 12;" +
-            "-fx-background-insets: 0;" +
-            "-fx-border-width: 0;"
+                "-fx-background-color: black;" +
+                "-fx-text-fill: white;" +
+                "-fx-prompt-text-fill: #888888;" +
+                "-fx-border-color: transparent;" +
+                "-fx-background-radius: 12;" +
+                "-fx-background-insets: 0;" +
+                "-fx-border-width: 0;"
         );
-        txtSearch.setOnAction(e -> search());
+        txtSearch.setOnAction(event -> search());
 
         searchIcon = new ImageView(new Image(getClass().getResourceAsStream("/images/icons/search_white.png")));
         searchIcon.setFitWidth(Consts.SEARCHBAR_ITEM_HEIGHT - 10);
@@ -76,29 +73,19 @@ public class SearchEnginePage extends BorderPane {
         });
 
         pnlContent = new BorderPane();
-
-        resultArea = new TextArea();
-        resultArea.setEditable(false);
-        resultArea.setWrapText(true);
-        resultArea.setStyle(
-                "-fx-background-color: -fx-control-inner-background; " +
-                "-fx-focus-color: transparent; " +
-                "-fx-faint-focus-color: transparent; " +
-                "-fx-background-insets: 0; " +
-                "-fx-background-radius: 0;"
-        );
     }
 
     private void buildLayout() {
         searchIcon.setPickOnBounds(true);
-        searchIcon.setOnMouseClicked(e -> search());
+        searchIcon.setOnMouseClicked(event -> search());
+
         HBox searchBox = new HBox(0);
         searchBox.setStyle(
-            "-fx-background-color: black;" +
-            "-fx-border-radius: 12;" +
-            "-fx-border-color: #00AEEF;" +
-            "-fx-padding: 0 3;" +
-            "-fx-background-radius: 14;"
+                "-fx-background-color: black;" +
+                "-fx-border-radius: 12;" +
+                "-fx-border-color: #00AEEF;" +
+                "-fx-padding: 0 3;" +
+                "-fx-background-radius: 14;"
         );
         HBox.setHgrow(txtSearch, Priority.ALWAYS);
         StackPane iconWrapper = new StackPane(searchIcon);
@@ -111,60 +98,29 @@ public class SearchEnginePage extends BorderPane {
         searchBar.getChildren().addAll(searchBox, cbbType);
         HBox.setHgrow(searchBox, Priority.ALWAYS);
 
-        BorderPane.setMargin(pnlContent, new Insets(10, 15, 50, 15));
         Label lblContent = new Label("Searched Information Results");
         lblContent.setFont(Configure.FONT_TITLE_SEARCH_CONTENT);
-        lblContent.setPadding(new Insets(0, 0, 15, 0));
-        pnlContent.setTop(lblContent);
-        pnlContent.setCenter(resultArea);
+        VBox contentHeader = new VBox(lblContent);
+        contentHeader.setPadding(new Insets(0, 0, 15, 0));
 
-        this.setTop(searchBar);
-        this.setStyle("-fx-background-color: white;");
-        this.setCenter(pnlContent);
+        BorderPane.setMargin(pnlContent, new Insets(10, 15, 50, 15));
+        pnlContent.setTop(contentHeader);
+        pnlContent.setCenter(resultPane);
+
+        setTop(searchBar);
+        setStyle("-fx-background-color: white;");
+        setCenter(pnlContent);
     }
 
     private void search() {
-        search(txtSearch.getText(), cbbType.getValue(), true, null);
-    }
-
-    private void setSearchingState(boolean searching) {
-        this.searching = searching;
-        txtSearch.setDisable(searching);
-        cbbType.setDisable(searching);
-        searchIcon.setDisable(searching);
-    }
-
-    public void setResult(String result) {
-        resultArea.setText(result);
-    }
-
-    public void clearResult() {
-        resultArea.clear();
-    }
-
-    public void searchCountryFromMap(String countryName, Consumer<String> onResult) {
-        search(countryName, "Country", false, onResult);
-    }
-
-    private void search(String keyword, String type, boolean updateMainResult, Consumer<String> onResult) {
-        if (searching) {
-            if (onResult != null) {
-                onResult.accept("Dang co mot yeu cau tim kiem khac.");
-            }
-            return;
-        }
-
-        String normalizedKeyword = keyword == null ? "" : keyword.trim().replaceAll("\\s+", " ").trim();
-        String normalizedType = type == null ? "Country" : type;
+        String normalizedKeyword = txtSearch.getText() == null
+                ? ""
+                : txtSearch.getText().trim().replaceAll("\\s+", " ").trim();
+        String normalizedType = cbbType.getValue() == null ? "Country" : cbbType.getValue();
         String validationMessage = validateKeyword(normalizedKeyword);
 
         if (validationMessage != null) {
-            if (updateMainResult) {
-                resultArea.setText(validationMessage);
-            }
-            if (onResult != null) {
-                onResult.accept(validationMessage);
-            }
+            resultPane.setText(validationMessage);
             return;
         }
 
@@ -175,53 +131,31 @@ public class SearchEnginePage extends BorderPane {
         String loadingMessage = normalizedType.equals("City")
                 ? "Dang tim kiem thanh pho..."
                 : "Dang tim kiem quoc gia...";
+        resultPane.search(request, loadingMessage);
+    }
 
-        setSearchingState(true);
-        if (updateMainResult) {
-            resultArea.setText(loadingMessage);
-        }
-        if (onResult != null) {
-            onResult.accept(loadingMessage);
-        }
+    public void setResult(String result) {
+        resultPane.setText(result);
+    }
 
-        Thread thread = new Thread(() -> {
-            String response;
-            try {
-                response = clientService.sendRequest(request);
-            } catch (Exception ex) {
-                response = "Loi khi tim kiem: " + ex.getMessage();
-            }
+    public void clearResult() {
+        resultPane.clear();
+    }
 
-            final String finalResponse = response;
-            Platform.runLater(() -> {
-                if (updateMainResult) {
-                    resultArea.setText(finalResponse);
-                }
-                if (onResult != null) {
-                    onResult.accept(finalResponse);
-                }
-                setSearchingState(false);
-            });
-        });
-
-        //thread.setDaemon(true);
-        thread.setName("SearchThread-" + System.currentTimeMillis());
-        thread.start();;
+    public SearchResultPane createResultPane() {
+        return new SearchResultPane(clientService);
     }
 
     private String validateKeyword(String keyword) {
         if (keyword.isEmpty()) {
             return "No results found. Try a different search term.";
         }
-
         if (keyword.length() > 100) {
             return "Tu khoa qua dai.";
         }
-
         if (!keyword.matches("[\\p{L}\\p{M}0-9 .,'()-]+")) {
             return "Tu khoa chua ky tu khong hop le.";
         }
-
         return null;
     }
 }

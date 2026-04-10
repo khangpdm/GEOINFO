@@ -1,91 +1,106 @@
 package geoinfo.server.service;
 
 import geoinfo.server.utils.ApiConnector;
+import geoinfo.server.utils.ValidationUtils;
 import org.json.JSONArray;
 import org.json.JSONObject;
 import org.jsoup.nodes.Document;
-import geoinfo.server.utils.ValidationUtils;
 
 import java.text.Normalizer;
 import java.util.Scanner;
 
 public class CountryService {
+    private static final String FLAG_URL_TEMPLATE = "https://flagcdn.com/w320/%s.png";
     private static final String ALL_COUNTRIES_URL =
             "https://restcountries.com/v3.1/all?fields=name,capital,altSpellings,cca2,cca3,latlng,population,currencies,languages,borders";
     private static JSONArray countriesCache;
 
     public static String getCountryInfo(String input) {
         try {
-            if (input == null) {
-                return "Lỗi khi lấy dữ liệu quốc gia: dữ liệu đầu vào rỗng.";
-            }
-
-            input = input.replaceAll("\\s+", " ").trim();
-
-            if (input.isEmpty()) {
-                return "Lỗi khi lấy dữ liệu quốc gia: dữ liệu đầu vào rỗng.";
-            }
-
-            if (input.length() < 2) {
-                return "Lỗi khi lấy dữ liệu quốc gia: tên quốc gia quá ngắn.";
-            }
-
-            if (input.length() > 100) {
-                return "Lỗi khi lấy dữ liệu quốc gia: tên quốc gia quá dài.";
-            }
-
-            if (!ValidationUtils.isValidLocationName(input)) {
-                return "Lỗi khi lấy dữ liệu quốc gia: tên quốc gia chứa ký tự không hợp lệ.";
-            }
-
-            ensureCountriesLoaded();
-
-            JSONObject json = findCountry(input);
-            if (json == null) {
-                return "Lỗi khi lấy dữ liệu quốc gia: không tìm thấy quốc gia phù hợp.";
-            }
-
-            JSONObject nameObj = json.optJSONObject("name");
-            String commonName = nameObj == null ? input : nameObj.optString("common", input);
-            String cca2 = json.optString("cca2", "");
-
-            JSONArray latlngArr = json.optJSONArray("latlng");
-            String latlng = latlngArr == null ? "Không có" : latlngArr.toString();
-            String population = String.valueOf(json.optLong("population", 0));
-            String currencies = buildCurrencies(json.optJSONObject("currencies"));
-            String languages = buildLanguages(json.optJSONObject("languages"));
-            String borders = formatBorders(json.optJSONArray("borders"));
-            String weather = CityService.getWeatherSummary(getCapitalOrCountryName(json, commonName));
-            String news = NewsService.getNewsInfo(commonName);
-            String attractions = AttractionService.getAttractionInfo(cca2);
-
-            return "===============================================\n"
-                    + "QUỐC GIA: " + commonName + "\n"
-                    + "Tọa độ: " + latlng + "\n"
-                    + "Dân số: " + population + "\n"
-                    + "Đơn vị tiền tệ: " + currencies + "\n"
-                    + "Ngôn ngữ: " + languages + "\n"
-                    + "Quốc gia láng giềng: " + borders + "\n"
-                    + "Thời tiết hiện tại: " + weather + "\n"
-                    + "===============================================\n"
-                    + "TIN TỨC\n"
-                    + news + "\n"
-                    + "===============================================\n"
-                    + attractions;
-
+            return getCountryDetails(input).summary();
         } catch (Exception e) {
-            return "Lỗi khi lấy dữ liệu quốc gia: " + e.getMessage();
+            return "Loi khi lay du lieu quoc gia: " + e.getMessage();
         }
+    }
+
+    public static String getCountryNews(String input) {
+        try {
+            CountryDetails details = getCountryDetails(input);
+            return "===============================================\n"
+                    + "TIN TUC: " + details.commonName() + "\n"
+                    + details.news();
+        } catch (Exception e) {
+            return "Loi khi lay tin tuc quoc gia: " + e.getMessage();
+        }
+    }
+
+    public static CountryDetails getCountryDetails(String input) throws Exception {
+        String validatedInput = validateInput(input);
+        ensureCountriesLoaded();
+
+        JSONObject json = findCountry(validatedInput);
+        if (json == null) {
+            throw new IllegalArgumentException("khong tim thay quoc gia phu hop.");
+        }
+
+        JSONObject nameObj = json.optJSONObject("name");
+        String commonName = nameObj == null ? validatedInput : nameObj.optString("common", validatedInput);
+        String cca2 = json.optString("cca2", "");
+
+        JSONArray latlngArr = json.optJSONArray("latlng");
+        String latlng = latlngArr == null ? "Khong co" : latlngArr.toString();
+        String population = String.valueOf(json.optLong("population", 0));
+        String currencies = buildCurrencies(json.optJSONObject("currencies"));
+        String languages = buildLanguages(json.optJSONObject("languages"));
+        String borders = formatBorders(json.optJSONArray("borders"));
+        String weather = CityService.getWeatherSummary(getCapitalOrCountryName(json, commonName));
+        String attractions = AttractionService.getAttractionInfo(cca2);
+        String news = NewsService.getNewsInfo(commonName);
+        String flagUrl = buildFlagUrl(cca2);
+
+        String summary = "===============================================\n"
+                + "QUOC GIA: " + commonName + "\n"
+                + "Toa do: " + latlng + "\n"
+                + "Dan so: " + population + "\n"
+                + "Don vi tien te: " + currencies + "\n"
+                + "Ngon ngu: " + languages + "\n"
+                + "Quoc gia lang gieng: " + borders + "\n"
+                + "Thoi tiet hien tai: " + weather + "\n"
+                + "===============================================\n"
+                + attractions;
+
+        return new CountryDetails(commonName, flagUrl, summary, news);
     }
 
     public static String reloadCountries() {
         try {
             countriesCache = null;
             ensureCountriesLoaded();
-            return "Đã tải lại dữ liệu quốc gia.";
+            return "Da tai lai du lieu quoc gia.";
         } catch (Exception e) {
-            return "Lỗi khi tải lại dữ liệu quốc gia: " + e.getMessage();
+            return "Loi khi tai lai du lieu quoc gia: " + e.getMessage();
         }
+    }
+
+    private static String validateInput(String input) {
+        if (input == null) {
+            throw new IllegalArgumentException("du lieu dau vao rong.");
+        }
+
+        input = input.replaceAll("\\s+", " ").trim();
+        if (input.isEmpty()) {
+            throw new IllegalArgumentException("du lieu dau vao rong.");
+        }
+        if (input.length() < 2) {
+            throw new IllegalArgumentException("ten quoc gia qua ngan.");
+        }
+        if (input.length() > 100) {
+            throw new IllegalArgumentException("ten quoc gia qua dai.");
+        }
+        if (!ValidationUtils.isValidLocationName(input)) {
+            throw new IllegalArgumentException("ten quoc gia chua ky tu khong hop le.");
+        }
+        return input;
     }
 
     private static synchronized JSONObject findCountry(String keyword) {
@@ -128,34 +143,25 @@ public class CountryService {
                 exactCommonMatch = country;
                 break;
             }
-
             if (exactOfficialMatch == null && normalizedKeyword.equals(officialName)) {
                 exactOfficialMatch = country;
             }
-
             if (compactCommonMatch == null && compactKeyword.equals(compactCommonName)) {
                 compactCommonMatch = country;
             }
-
             if (compactOfficialMatch == null && compactKeyword.equals(compactOfficialName)) {
                 compactOfficialMatch = country;
             }
-
-            if (accentInsensitiveCommonMatch == null
-                    && accentInsensitiveKeyword.equals(accentInsensitiveCommonName)) {
+            if (accentInsensitiveCommonMatch == null && accentInsensitiveKeyword.equals(accentInsensitiveCommonName)) {
                 accentInsensitiveCommonMatch = country;
             }
-
-            if (accentInsensitiveOfficialMatch == null
-                    && accentInsensitiveKeyword.equals(accentInsensitiveOfficialName)) {
+            if (accentInsensitiveOfficialMatch == null && accentInsensitiveKeyword.equals(accentInsensitiveOfficialName)) {
                 accentInsensitiveOfficialMatch = country;
             }
-
             if (compactAccentInsensitiveCommonMatch == null
                     && compactAccentInsensitiveKeyword.equals(compactAccentInsensitiveCommonName)) {
                 compactAccentInsensitiveCommonMatch = country;
             }
-
             if (compactAccentInsensitiveOfficialMatch == null
                     && compactAccentInsensitiveKeyword.equals(compactAccentInsensitiveOfficialName)) {
                 compactAccentInsensitiveOfficialMatch = country;
@@ -173,16 +179,13 @@ public class CountryService {
                     if (exactAltSpellingMatch == null && normalizedKeyword.equals(normalizedAlt)) {
                         exactAltSpellingMatch = country;
                     }
-
                     if (compactAltSpellingMatch == null && compactKeyword.equals(compactAlt)) {
                         compactAltSpellingMatch = country;
                     }
-
                     if (accentInsensitiveAltSpellingMatch == null
                             && accentInsensitiveKeyword.equals(accentInsensitiveAlt)) {
                         accentInsensitiveAltSpellingMatch = country;
                     }
-
                     if (compactAccentInsensitiveAltSpellingMatch == null
                             && compactAccentInsensitiveKeyword.equals(compactAccentInsensitiveAlt)) {
                         compactAccentInsensitiveAltSpellingMatch = country;
@@ -191,8 +194,7 @@ public class CountryService {
             }
 
             if (partialMatch == null && normalizedKeyword.length() >= 4
-                    && (commonName.startsWith(normalizedKeyword)
-                    || officialName.startsWith(normalizedKeyword))) {
+                    && (commonName.startsWith(normalizedKeyword) || officialName.startsWith(normalizedKeyword))) {
                 partialMatch = country;
             }
         }
@@ -218,19 +220,19 @@ public class CountryService {
         }
 
         Document doc = ApiConnector.get(ALL_COUNTRIES_URL);
-        if (doc == null) {  // ✅ Check trước
-            throw new IllegalStateException("Không thể kết nối API quốc gia: " + ALL_COUNTRIES_URL);
+        if (doc == null) {
+            throw new IllegalStateException("khong the ket noi API quoc gia: " + ALL_COUNTRIES_URL);
         }
         String body = doc.text();
         if (body == null || body.isBlank()) {
-            throw new IllegalStateException("Dữ liệu quốc gia trống hoặc không hợp lệ");
+            throw new IllegalStateException("du lieu quoc gia trong hoac khong hop le");
         }
         countriesCache = new JSONArray(body);
     }
 
     private static String buildCurrencies(JSONObject currencies) {
         if (currencies == null || currencies.isEmpty()) {
-            return "Không có";
+            return "Khong co";
         }
 
         StringBuilder result = new StringBuilder();
@@ -253,12 +255,12 @@ public class CountryService {
             }
         }
 
-        return result.isEmpty() ? "Không có" : result.toString();
+        return result.isEmpty() ? "Khong co" : result.toString();
     }
 
     private static String buildLanguages(JSONObject languages) {
         if (languages == null || languages.isEmpty()) {
-            return "Không có";
+            return "Khong co";
         }
 
         StringBuilder result = new StringBuilder();
@@ -272,7 +274,7 @@ public class CountryService {
             }
         }
 
-        return result.isEmpty() ? "Không có" : result.toString();
+        return result.isEmpty() ? "Khong co" : result.toString();
     }
 
     private static String getCapitalOrCountryName(JSONObject country, String fallbackName) {
@@ -288,7 +290,7 @@ public class CountryService {
 
     private static String formatBorders(JSONArray borders) {
         if (borders == null || borders.isEmpty()) {
-            return "Không có";
+            return "Khong co";
         }
 
         StringBuilder result = new StringBuilder();
@@ -304,7 +306,7 @@ public class CountryService {
             result.append(findCountryNameByCca3(borderCode));
         }
 
-        return result.isEmpty() ? "Không có" : result.toString();
+        return result.isEmpty() ? "Khong co" : result.toString();
     }
 
     private static String findCountryNameByCca3(String cca3) {
@@ -327,6 +329,13 @@ public class CountryService {
         }
 
         return cca3;
+    }
+
+    private static String buildFlagUrl(String cca2) {
+        if (cca2 == null || cca2.isBlank()) {
+            return "";
+        }
+        return FLAG_URL_TEMPLATE.formatted(cca2.trim().toLowerCase());
     }
 
     private static String normalize(String value) {
@@ -358,7 +367,7 @@ public class CountryService {
         String input = "";
 
         while (!input.equalsIgnoreCase("exit")) {
-            System.out.print("Nhập tên quốc gia: ");
+            System.out.print("Nhap ten quoc gia: ");
             input = scanner.nextLine();
 
             if (!input.equalsIgnoreCase("exit")) {
@@ -367,5 +376,8 @@ public class CountryService {
         }
 
         scanner.close();
+    }
+
+    public record CountryDetails(String commonName, String flagUrl, String summary, String news) {
     }
 }
