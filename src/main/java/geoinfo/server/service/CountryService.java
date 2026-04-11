@@ -12,52 +12,24 @@ import java.util.Scanner;
 public class CountryService {
     private static final String ALL_COUNTRIES_URL =
             "https://restcountries.com/v3.1/all?fields=name,capital,altSpellings,cca2,cca3,latlng,population,currencies,languages,borders";
+    private static final String FLAG_URL_TEMPLATE = "https://flagcdn.com/w320/%s.png";
+
     private static JSONArray countriesCache;
 
     public static String getCountryInfo(String input) {
         try {
-            if (input == null) {
-                return createErrorResponse("Loi khi lay du lieu quoc gia: du lieu dau vao rong.");
-            }
-
-            input = input.replaceAll("\\s+", " ").trim();
-
-            if (input.isEmpty()) {
-                return createErrorResponse("Loi khi lay du lieu quoc gia: du lieu dau vao rong.");
-            }
-
-            if (input.length() < 2) {
-                return createErrorResponse("Loi khi lay du lieu quoc gia: ten quoc gia qua ngan.");
-            }
-
-            if (input.length() > 100) {
-                return createErrorResponse("Loi khi lay du lieu quoc gia: ten quoc gia qua dai.");
-            }
-
-            if (!ValidationUtils.isValidLocationName(input)) {
-                return createErrorResponse("Loi khi lay du lieu quoc gia: ten quoc gia chua ky tu khong hop le.");
-            }
-
-            ensureCountriesLoaded();
-
-            JSONObject json = findCountry(input);
-            if (json == null) {
-                return createErrorResponse("Loi khi lay du lieu quoc gia: khong tim thay quoc gia phu hop.");
-            }
-
-            JSONObject nameObj = json.optJSONObject("name");
+            JSONObject country = getValidatedCountry(input);
+            JSONObject nameObj = country.optJSONObject("name");
             String commonName = nameObj == null ? input : nameObj.optString("common", input);
-            String cca2 = json.optString("cca2", "");
+            String cca2 = country.optString("cca2", "");
 
-            JSONArray latlngArr = json.optJSONArray("latlng");
+            JSONArray latlngArr = country.optJSONArray("latlng");
             String coordinates = latlngArr == null ? "Khong co" : latlngArr.toString();
-            String population = String.valueOf(json.optLong("population", 0));
-            String currencies = buildCurrencies(json.optJSONObject("currencies"));
-            String languages = buildLanguages(json.optJSONObject("languages"));
-            String neighboringCountries = formatBorders(json.optJSONArray("borders"));
-            String currentWeather = CityService.getWeatherSummary(getCapitalOrCountryName(json, commonName));
-            String newsJson = NewsService.getNewsInfo(commonName);
-            String attractionsJson = AttractionService.getAttractionInfo(cca2);
+            String population = String.valueOf(country.optLong("population", 0));
+            String currencies = buildCurrencies(country.optJSONObject("currencies"));
+            String languages = buildLanguages(country.optJSONObject("languages"));
+            String neighboringCountries = formatBorders(country.optJSONArray("borders"));
+            String currentWeather = CityService.getWeatherSummary(getCapitalOrCountryName(country, commonName));
 
             JSONObject response = new JSONObject();
             response.put("status", "success");
@@ -69,11 +41,31 @@ public class CountryService {
             response.put("languages", languages);
             response.put("neighboringCountries", neighboringCountries);
             response.put("currentWeather", currentWeather);
-            response.put("news", extractItems(newsJson));
-            response.put("attractions", extractItems(attractionsJson));
+            response.put("flagUrl", buildFlagUrl(cca2));
+            response.put("moreInfoRequest", "country-more:" + commonName);
+            response.put("moreInfoLabel", "Them thong tin");
             return response.toString(2);
         } catch (Exception e) {
             return createErrorResponse("Loi khi lay du lieu quoc gia: " + e.getMessage());
+        }
+    }
+
+    public static String getCountryMoreInfo(String input) {
+        try {
+            JSONObject country = getValidatedCountry(input);
+            JSONObject nameObj = country.optJSONObject("name");
+            String commonName = nameObj == null ? input : nameObj.optString("common", input);
+            String cca2 = country.optString("cca2", "");
+
+            JSONObject response = new JSONObject();
+            response.put("status", "success");
+            response.put("type", "countryMoreInfo");
+            response.put("name", commonName);
+            response.put("news", extractItems(NewsService.getNewsInfo(commonName)));
+            response.put("attractions", extractItems(AttractionService.getAttractionInfo(cca2)));
+            return response.toString(2);
+        } catch (Exception e) {
+            return createErrorResponse("Loi khi lay them thong tin quoc gia: " + e.getMessage());
         }
     }
 
@@ -93,6 +85,33 @@ public class CountryService {
                     .put("message", "Loi khi tai lai du lieu quoc gia: " + e.getMessage())
                     .toString(2);
         }
+    }
+
+    private static JSONObject getValidatedCountry(String input) throws Exception {
+        if (input == null) {
+            throw new IllegalArgumentException("du lieu dau vao rong.");
+        }
+
+        input = input.replaceAll("\\s+", " ").trim();
+        if (input.isEmpty()) {
+            throw new IllegalArgumentException("du lieu dau vao rong.");
+        }
+        if (input.length() < 2) {
+            throw new IllegalArgumentException("ten quoc gia qua ngan.");
+        }
+        if (input.length() > 100) {
+            throw new IllegalArgumentException("ten quoc gia qua dai.");
+        }
+        if (!ValidationUtils.isValidLocationName(input)) {
+            throw new IllegalArgumentException("ten quoc gia chua ky tu khong hop le.");
+        }
+
+        ensureCountriesLoaded();
+        JSONObject country = findCountry(input);
+        if (country == null) {
+            throw new IllegalArgumentException("khong tim thay quoc gia phu hop.");
+        }
+        return country;
     }
 
     private static synchronized JSONObject findCountry(String keyword) {
@@ -135,34 +154,25 @@ public class CountryService {
                 exactCommonMatch = country;
                 break;
             }
-
             if (exactOfficialMatch == null && normalizedKeyword.equals(officialName)) {
                 exactOfficialMatch = country;
             }
-
             if (compactCommonMatch == null && compactKeyword.equals(compactCommonName)) {
                 compactCommonMatch = country;
             }
-
             if (compactOfficialMatch == null && compactKeyword.equals(compactOfficialName)) {
                 compactOfficialMatch = country;
             }
-
-            if (accentInsensitiveCommonMatch == null
-                    && accentInsensitiveKeyword.equals(accentInsensitiveCommonName)) {
+            if (accentInsensitiveCommonMatch == null && accentInsensitiveKeyword.equals(accentInsensitiveCommonName)) {
                 accentInsensitiveCommonMatch = country;
             }
-
-            if (accentInsensitiveOfficialMatch == null
-                    && accentInsensitiveKeyword.equals(accentInsensitiveOfficialName)) {
+            if (accentInsensitiveOfficialMatch == null && accentInsensitiveKeyword.equals(accentInsensitiveOfficialName)) {
                 accentInsensitiveOfficialMatch = country;
             }
-
             if (compactAccentInsensitiveCommonMatch == null
                     && compactAccentInsensitiveKeyword.equals(compactAccentInsensitiveCommonName)) {
                 compactAccentInsensitiveCommonMatch = country;
             }
-
             if (compactAccentInsensitiveOfficialMatch == null
                     && compactAccentInsensitiveKeyword.equals(compactAccentInsensitiveOfficialName)) {
                 compactAccentInsensitiveOfficialMatch = country;
@@ -180,16 +190,13 @@ public class CountryService {
                     if (exactAltSpellingMatch == null && normalizedKeyword.equals(normalizedAlt)) {
                         exactAltSpellingMatch = country;
                     }
-
                     if (compactAltSpellingMatch == null && compactKeyword.equals(compactAlt)) {
                         compactAltSpellingMatch = country;
                     }
-
                     if (accentInsensitiveAltSpellingMatch == null
                             && accentInsensitiveKeyword.equals(accentInsensitiveAlt)) {
                         accentInsensitiveAltSpellingMatch = country;
                     }
-
                     if (compactAccentInsensitiveAltSpellingMatch == null
                             && compactAccentInsensitiveKeyword.equals(compactAccentInsensitiveAlt)) {
                         compactAccentInsensitiveAltSpellingMatch = country;
@@ -198,8 +205,7 @@ public class CountryService {
             }
 
             if (partialMatch == null && normalizedKeyword.length() >= 4
-                    && (commonName.startsWith(normalizedKeyword)
-                    || officialName.startsWith(normalizedKeyword))) {
+                    && (commonName.startsWith(normalizedKeyword) || officialName.startsWith(normalizedKeyword))) {
                 partialMatch = country;
             }
         }
@@ -334,6 +340,13 @@ public class CountryService {
         }
 
         return cca3;
+    }
+
+    private static String buildFlagUrl(String cca2) {
+        if (cca2 == null || cca2.isBlank()) {
+            return "";
+        }
+        return FLAG_URL_TEMPLATE.formatted(cca2.trim().toLowerCase());
     }
 
     private static String normalize(String value) {

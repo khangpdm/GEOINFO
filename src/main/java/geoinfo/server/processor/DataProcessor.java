@@ -44,6 +44,30 @@ public class DataProcessor {
             return CityService.getCityInfo(city);
         }
 
+        if (lowerInput.startsWith("country-more:")) {
+            String country = normalizedInput.substring("country-more:".length()).trim();
+            if (country.isEmpty()) {
+                return new JSONObject()
+                        .put("status", "error")
+                        .put("type", "countryMoreInfo")
+                        .put("message", "PLEASE ENTER COUNTRY NAME.")
+                        .toString(2);
+            }
+            return CountryService.getCountryMoreInfo(country);
+        }
+
+        if (lowerInput.startsWith("city-more:")) {
+            String city = normalizedInput.substring("city-more:".length()).trim();
+            if (city.isEmpty()) {
+                return new JSONObject()
+                        .put("status", "error")
+                        .put("type", "cityMoreInfo")
+                        .put("message", "PLEASE ENTER CITY NAME.")
+                        .toString(2);
+            }
+            return CityService.getCityMoreInfo(city);
+        }
+
         String countryResult = CountryService.getCountryInfo(normalizedInput);
         if (isSuccessResponse(countryResult)) {
             return countryResult;

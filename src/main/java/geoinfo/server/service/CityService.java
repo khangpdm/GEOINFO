@@ -19,35 +19,14 @@ public class CityService {
     private static final String GEONAMES_USERNAME = "tinmi2005";
 
     public static String getCityInfo(String input) {
-        if (input == null) {
-            return createErrorResponse("Loi khi lay du lieu thanh pho: du lieu dau vao rong.");
-        }
-
-        input = input.replaceAll("\\s+", " ").trim();
-
-        if (input.isEmpty()) {
-            return createErrorResponse("Loi khi lay du lieu thanh pho: du lieu dau vao rong.");
-        }
-
-        if (input.length() < 2) {
-            return createErrorResponse("Loi khi lay du lieu thanh pho: ten thanh pho qua ngan.");
-        }
-
-        if (input.length() > 100) {
-            return createErrorResponse("Loi khi lay du lieu thanh pho: ten thanh pho qua dai.");
-        }
-
-        if (!ValidationUtils.isValidLocationName(input)) {
-            return createErrorResponse("Loi khi lay du lieu thanh pho: ten thanh pho chua ky tu khong hop le.");
-        }
-
-        String url = "https://api.weatherapi.com/v1/current.json?key="
-                + WEATHER_API_KEY
-                + "&q="
-                + URLEncoder.encode(input.trim(), StandardCharsets.UTF_8)
-                + "&aqi=no";
-
         try {
+            String sanitized = validateInput(input);
+            String url = "https://api.weatherapi.com/v1/current.json?key="
+                    + WEATHER_API_KEY
+                    + "&q="
+                    + URLEncoder.encode(sanitized.trim(), StandardCharsets.UTF_8)
+                    + "&aqi=no";
+
             Document doc = ApiConnector.get(url);
             JSONObject json = new JSONObject(doc.text());
 
@@ -57,7 +36,7 @@ public class CityService {
             }
 
             String name = location.optString("name");
-            if (!isReasonablySameCity(input, name)) {
+            if (!isReasonablySameCity(sanitized, name)) {
                 return createErrorResponse("Loi khi lay du lieu thanh pho: khong tim thay thanh pho phu hop.");
             }
 
@@ -79,7 +58,6 @@ public class CityService {
             double windKph = current.optDouble("wind_kph");
 
             String population = getCityPopulation(name, country, latitude, longitude);
-            String newsJson = NewsService.getNewsInfo(name);
             String hotelsJson = HotelService.getHotelsByCity(name);
 
             JSONObject response = new JSONObject();
@@ -96,11 +74,44 @@ public class CityService {
             response.put("weatherCondition", weatherCondition);
             response.put("humidity", humidity);
             response.put("windKph", windKph);
-            response.put("news", extractItems(newsJson));
             response.put("hotels", extractItems(hotelsJson));
+            response.put("moreInfoRequest", "city-more:" + name);
+            response.put("moreInfoLabel", "Them thong tin");
             return response.toString(2);
-        } catch (IOException e) {
+        } catch (Exception e) {
             return createErrorResponse("Loi khi lay du lieu thanh pho: " + e.getMessage());
+        }
+    }
+
+    public static String getCityMoreInfo(String input) {
+        try {
+            String sanitized = validateInput(input);
+            String url = "https://api.weatherapi.com/v1/current.json?key="
+                    + WEATHER_API_KEY
+                    + "&q="
+                    + URLEncoder.encode(sanitized.trim(), StandardCharsets.UTF_8)
+                    + "&aqi=no";
+
+            Document doc = ApiConnector.get(url);
+            JSONObject json = new JSONObject(doc.text());
+            JSONObject location = json.optJSONObject("location");
+            if (location == null) {
+                return createErrorResponse("Loi khi lay them thong tin thanh pho: vi tri khong hop le.");
+            }
+
+            String name = location.optString("name");
+            if (!isReasonablySameCity(sanitized, name)) {
+                return createErrorResponse("Loi khi lay them thong tin thanh pho: khong tim thay thanh pho phu hop.");
+            }
+
+            JSONObject response = new JSONObject();
+            response.put("status", "success");
+            response.put("type", "cityMoreInfo");
+            response.put("name", name);
+            response.put("news", extractItems(NewsService.getNewsInfo(name)));
+            return response.toString(2);
+        } catch (Exception e) {
+            return createErrorResponse("Loi khi lay them thong tin thanh pho: " + e.getMessage());
         }
     }
 
@@ -110,7 +121,6 @@ public class CityService {
         }
 
         query = query.replaceAll("\\s+", " ").trim();
-
         if (query.isEmpty()) {
             return "Chua co du lieu thoi tiet.";
         }
@@ -142,6 +152,27 @@ public class CityService {
         }
     }
 
+    private static String validateInput(String input) {
+        if (input == null) {
+            throw new IllegalArgumentException("du lieu dau vao rong.");
+        }
+
+        input = input.replaceAll("\\s+", " ").trim();
+        if (input.isEmpty()) {
+            throw new IllegalArgumentException("du lieu dau vao rong.");
+        }
+        if (input.length() < 2) {
+            throw new IllegalArgumentException("ten thanh pho qua ngan.");
+        }
+        if (input.length() > 100) {
+            throw new IllegalArgumentException("ten thanh pho qua dai.");
+        }
+        if (!ValidationUtils.isValidLocationName(input)) {
+            throw new IllegalArgumentException("ten thanh pho chua ky tu khong hop le.");
+        }
+        return input;
+    }
+
     private static String getCityPopulation(String cityName, String countryName, double lat, double lon) {
         String population = getCityPopulationFromApiNinjas(cityName, lat, lon);
         if (!"Chua co du lieu".equals(population)) {
@@ -166,7 +197,6 @@ public class CityService {
             connection.setReadTimeout(5000);
 
             int responseCode = connection.getResponseCode();
-
             if (responseCode != HttpURLConnection.HTTP_OK) {
                 connection.disconnect();
                 return "Chua co du lieu (ma: " + responseCode + ")";
@@ -263,7 +293,6 @@ public class CityService {
     private static boolean isReasonablySameCity(String input, String resolvedName) {
         String a = normalizeName(input);
         String b = normalizeName(resolvedName);
-
         return a.equals(b) || a.contains(b) || b.contains(a);
     }
 
