@@ -106,7 +106,8 @@ public class SearchEnginePage extends BorderPane {
     }
 
     private void search() {
-        String keyword = ValidationUtils.sanitizeInput(txtSearch.getText());
+        String originalKeyword = txtSearch.getText();
+        String keyword = ValidationUtils.sanitizeInput(originalKeyword);
         String type = cbbType.getValue();
 
         if (ValidationUtils.isEmpty(keyword)) {
@@ -114,15 +115,19 @@ public class SearchEnginePage extends BorderPane {
             return;
         }
         if (keyword.length() > 100) {
-            resultPane.setText("Tu khoa qua dai.");
+            resultPane.setText("Keyword is too long.");
             return;
         }
         if (!ValidationUtils.isValidLocationName(keyword)) {
-            resultPane.setText("Tu khoa chua ky tu khong hop le.");
+            resultPane.setText("Keyword contains illegal characters.");
             return;
         }
 
-        txtSearch.setText(keyword);
+        if (!keyword.equals(originalKeyword)) {
+            txtSearch.setText(keyword);
+        }
+        txtSearch.requestFocus();
+        txtSearch.positionCaret(keyword.length());
         String request = type.toLowerCase() + ":" + keyword;
         String loadingMessage = type.equals("City")
                 ? "Looking for city information..."

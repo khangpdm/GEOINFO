@@ -415,7 +415,7 @@ public class HotelService {
 
     public static void main(String[] args) {
         Scanner sc = new Scanner(System.in);
-        System.out.print("Nhap thanh pho: ");
+        System.out.print("City name: ");
         String city = sc.nextLine();
         System.out.println(getHotelsByCity(city));
     }

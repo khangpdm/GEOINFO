@@ -32,12 +32,12 @@ public class CityService {
 
             JSONObject location = json.optJSONObject("location");
             if (location == null) {
-                return createErrorResponse("Loi khi lay du lieu thanh pho: vi tri khong hop le.");
+                return createErrorResponse("Error getting data: invalid location.");
             }
 
             String name = location.optString("name");
             if (!isReasonablySameCity(sanitized, name)) {
-                return createErrorResponse("Loi khi lay du lieu thanh pho: khong tim thay thanh pho phu hop.");
+                return createErrorResponse("Error getting data: not found city name.");
             }
 
             String region = location.optString("region");
@@ -48,7 +48,7 @@ public class CityService {
 
             JSONObject current = json.optJSONObject("current");
             if (current == null) {
-                return createErrorResponse("Loi khi lay du lieu thanh pho: thieu du lieu thoi tiet.");
+                return createErrorResponse("Error getting data: missing weather data.");
             }
 
             double temperatureCelsius = current.optDouble("temp_c");
@@ -76,10 +76,10 @@ public class CityService {
             response.put("windKph", windKph);
             response.put("hotels", extractItems(hotelsJson));
             response.put("moreInfoRequest", "city-more:" + name);
-            response.put("moreInfoLabel", "Them thong tin");
+            response.put("moreInfoLabel", "More Information");
             return response.toString(2);
         } catch (Exception e) {
-            return createErrorResponse("Loi khi lay du lieu thanh pho: " + e.getMessage());
+            return createErrorResponse("Error getting data: " + e.getMessage());
         }
     }
 
@@ -96,12 +96,12 @@ public class CityService {
             JSONObject json = new JSONObject(doc.text());
             JSONObject location = json.optJSONObject("location");
             if (location == null) {
-                return createErrorResponse("Loi khi lay them thong tin thanh pho: vi tri khong hop le.");
+                return createErrorResponse("Error getting data: invalid location.");
             }
 
             String name = location.optString("name");
             if (!isReasonablySameCity(sanitized, name)) {
-                return createErrorResponse("Loi khi lay them thong tin thanh pho: khong tim thay thanh pho phu hop.");
+                return createErrorResponse("Error getting data: not found city name.");
             }
 
             JSONObject response = new JSONObject();
@@ -111,18 +111,18 @@ public class CityService {
             response.put("news", extractItems(NewsService.getNewsInfo(name)));
             return response.toString(2);
         } catch (Exception e) {
-            return createErrorResponse("Loi khi lay them thong tin thanh pho: " + e.getMessage());
+            return createErrorResponse("Error getting data: " + e.getMessage());
         }
     }
 
     public static String getWeatherSummary(String query) {
         if (query == null) {
-            return "Chua co du lieu thoi tiet.";
+            return "No weather data available.";
         }
 
         query = query.replaceAll("\\s+", " ").trim();
         if (query.isEmpty()) {
-            return "Chua co du lieu thoi tiet.";
+            return "No weather data available.";
         }
 
         String url = "https://api.weatherapi.com/v1/current.json?key="
@@ -140,42 +140,42 @@ public class CityService {
             String placeName = location.optString("name", query);
             double tempC = current.optDouble("temp_c", 0);
             String condition = current.optJSONObject("condition") == null
-                    ? "Chua co du lieu"
-                    : current.getJSONObject("condition").optString("text", "Chua co du lieu");
+                    ? "No data"
+                    : current.getJSONObject("condition").optString("text", "No data");
             int humidity = current.optInt("humidity", 0);
             double windKph = current.optDouble("wind_kph", 0);
 
-            return placeName + ": " + tempC + " C, " + condition
-                    + ", do am " + humidity + "%, gio " + windKph + " km/h";
+            return placeName + ": " + tempC + " °C, " + condition
+                    + ", humidity: " + humidity + "%, wind: " + windKph + " km/h";
         } catch (Exception e) {
-            return "Chua lay duoc du lieu thoi tiet: " + e.getMessage();
+            return "Error getting weather data: " + e.getMessage();
         }
     }
 
     private static String validateInput(String input) {
         if (input == null) {
-            throw new IllegalArgumentException("du lieu dau vao rong.");
+            throw new IllegalArgumentException("No data input.");
         }
 
         input = input.replaceAll("\\s+", " ").trim();
         if (input.isEmpty()) {
-            throw new IllegalArgumentException("du lieu dau vao rong.");
+            throw new IllegalArgumentException("No data input.");
         }
         if (input.length() < 2) {
-            throw new IllegalArgumentException("ten thanh pho qua ngan.");
+            throw new IllegalArgumentException("City name is too short!.");
         }
         if (input.length() > 100) {
-            throw new IllegalArgumentException("ten thanh pho qua dai.");
+            throw new IllegalArgumentException("City name is too long!.");
         }
         if (!ValidationUtils.isValidLocationName(input)) {
-            throw new IllegalArgumentException("ten thanh pho chua ky tu khong hop le.");
+            throw new IllegalArgumentException("City name is contains invalid characters!.");
         }
         return input;
     }
 
     private static String getCityPopulation(String cityName, String countryName, double lat, double lon) {
         String population = getCityPopulationFromApiNinjas(cityName, lat, lon);
-        if (!"Chua co du lieu".equals(population)) {
+        if (!"No data".equals(population)) {
             return population;
         }
 
@@ -199,13 +199,13 @@ public class CityService {
             int responseCode = connection.getResponseCode();
             if (responseCode != HttpURLConnection.HTTP_OK) {
                 connection.disconnect();
-                return "Chua co du lieu (ma: " + responseCode + ")";
+                return "No data (code: " + responseCode + ")";
             }
 
             String body = new String(connection.getInputStream().readAllBytes(), StandardCharsets.UTF_8);
             JSONArray cities = new JSONArray(body);
             if (cities.isEmpty()) {
-                return "Chua co du lieu";
+                return "No data";
             }
 
             JSONObject bestMatch = null;
@@ -232,9 +232,9 @@ public class CityService {
             }
 
             long population = bestMatch.optLong("population", 0);
-            return population > 0 ? String.valueOf(population) : "Chua co du lieu";
+            return population > 0 ? String.valueOf(population) : "No data";
         } catch (Exception e) {
-            return "Chua co du lieu";
+            return "No data";
         } finally {
             if (connection != null) {
                 connection.disconnect();
@@ -256,7 +256,7 @@ public class CityService {
             JSONObject json = new JSONObject(doc.text());
             JSONArray geonames = json.optJSONArray("geonames");
             if (geonames == null || geonames.isEmpty()) {
-                return "Chua co du lieu";
+                return "No data";
             }
 
             long bestPopulation = 0;
@@ -268,9 +268,9 @@ public class CityService {
                 }
             }
 
-            return bestPopulation > 0 ? String.valueOf(bestPopulation) : "Chua co du lieu";
+            return bestPopulation > 0 ? String.valueOf(bestPopulation) : "No data";
         } catch (Exception e) {
-            return "Chua co du lieu";
+            return "No data";
         }
     }
 
