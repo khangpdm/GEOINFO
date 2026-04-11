@@ -9,7 +9,7 @@ public class DataProcessor {
         if (input == null || input.isBlank()) {
             return new JSONObject()
                     .put("status", "error")
-                    .put("message", "Du lieu rong.")
+                    .put("message", "Data is empty.")
                     .toString(2);
         }
 
@@ -80,7 +80,7 @@ public class DataProcessor {
 
         return new JSONObject()
                 .put("status", "error")
-                .put("message", "Khong tim thay thong tin.")
+                .put("message", "Not found.")
                 .put("countryResponse", new JSONObject(countryResult))
                 .put("cityResponse", new JSONObject(cityResult))
                 .toString(2);

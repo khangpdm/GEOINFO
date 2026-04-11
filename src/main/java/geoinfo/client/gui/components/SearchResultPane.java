@@ -54,7 +54,7 @@ public class SearchResultPane extends VBox {
         titleLabel.setVisible(false);
         titleLabel.setManaged(false);
 
-        moreInfoButton = new Button("Them thong tin");
+        moreInfoButton = new Button("More Information");
         moreInfoButton.setVisible(false);
         moreInfoButton.setManaged(false);
         moreInfoButton.setDisable(true);
@@ -127,14 +127,14 @@ public class SearchResultPane extends VBox {
 
         long requestId = latestRequestId.get();
         moreInfoButton.setDisable(true);
-        moreInfoButton.setText("Dang tai them...");
+        moreInfoButton.setText("Loading...");
 
         SEARCH_EXECUTOR.submit(() -> {
             String response;
             try {
                 response = clientService.sendRequest(request);
             } catch (Exception ex) {
-                response = "Loi khi tai them thong tin: " + ex.getMessage();
+                response = "Error loading: " + ex.getMessage();
             }
 
             String finalResponse = response;
@@ -144,8 +144,9 @@ public class SearchResultPane extends VBox {
                 }
                 renderResponse(finalResponse, true);
                 loadedMoreInfoRequest = request;
-                moreInfoButton.setText("Da them thong tin");
-                moreInfoButton.setDisable(true);
+//                moreInfoButton.setText("Da them thong tin");
+//                moreInfoButton.setDisable(true);
+                moreInfoButton.setVisible(false);
             });
         });
     }
@@ -202,12 +203,12 @@ public class SearchResultPane extends VBox {
             moreInfoButton.setVisible(false);
             moreInfoButton.setManaged(false);
             moreInfoButton.setDisable(true);
-            moreInfoButton.setText("Them thong tin");
+            moreInfoButton.setText("More Information");
         } else {
             moreInfoButton.setVisible(true);
             moreInfoButton.setManaged(true);
             moreInfoButton.setDisable(false);
-            moreInfoButton.setText(json.optString("moreInfoLabel", "Them thong tin"));
+            moreInfoButton.setText(json.optString("moreInfoLabel", "More Information"));
         }
     }
 
@@ -421,7 +422,7 @@ public class SearchResultPane extends VBox {
         moreInfoButton.setVisible(false);
         moreInfoButton.setManaged(false);
         moreInfoButton.setDisable(true);
-        moreInfoButton.setText("Them thong tin");
+        moreInfoButton.setText("More Information");
     }
 
     private void showMessage(String message) {
