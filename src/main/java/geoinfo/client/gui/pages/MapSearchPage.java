@@ -3,16 +3,14 @@ package geoinfo.client.gui.pages;
 import geoinfo.client.gui.components.SearchResultPane;
 import javafx.geometry.Insets;
 import javafx.geometry.Point2D;
+import javafx.geometry.Pos;
 import javafx.scene.Group;
-import javafx.scene.Scene;
+import javafx.scene.control.Button;
 import javafx.scene.control.Label;
-import javafx.scene.layout.BorderPane;
-import javafx.scene.layout.Pane;
+import javafx.scene.layout.*;
 import javafx.scene.paint.Color;
 import javafx.scene.shape.Rectangle;
 import javafx.scene.shape.SVGPath;
-import javafx.stage.Modality;
-import javafx.stage.Stage;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 import org.w3c.dom.NodeList;
@@ -23,6 +21,8 @@ import java.io.File;
 
 public class MapSearchPage extends BorderPane {
     private final SearchEnginePage searchEnginePage;
+    private VBox bottomContent;
+    private boolean isExpanded = true;
     private Label mapTooltip;
     private Group map;
     private Pane mapContainer;
@@ -33,6 +33,36 @@ public class MapSearchPage extends BorderPane {
         buildLayout();
     }
 
+    private void initComponents() {
+        try {
+            String path = System.getProperty("user.dir") + "/src/main/resources/data/world.svg";
+            map = loadSvgMap(path);
+
+            mapTooltip = new Label("");
+            mapTooltip.getStyleClass().add("map-tooltip-style");
+            mapTooltip.setMouseTransparent(true);
+            mapTooltip.setVisible(false);
+
+        } catch (Exception e) {
+            System.err.println("Error load map: " + e.getMessage());
+            e.printStackTrace();
+        }
+    }
+
+    private void buildLayout() {
+        mapContainer = new Pane();
+        mapContainer.getChildren().add(map);
+        mapContainer.getChildren().add(mapTooltip);
+        mapContainer.setStyle("-fx-background-color: white;");
+
+        Rectangle clip = new Rectangle();
+        clip.widthProperty().bind(mapContainer.widthProperty());
+        clip.heightProperty().bind(mapContainer.heightProperty());
+        mapContainer.setClip(clip);
+        enableZoomAndPan(mapContainer, map);
+
+        this.setCenter(mapContainer);
+    }
     public Group loadSvgMap(String filePath) throws Exception {
         Group mapGroup = new Group();
         DocumentBuilderFactory factory = DocumentBuilderFactory.newInstance();
@@ -67,7 +97,7 @@ public class MapSearchPage extends BorderPane {
             svgPath.setOnMouseClicked(event -> {
                 event.consume();
                 if (event.getButton() == javafx.scene.input.MouseButton.SECONDARY) {
-                    showCountryPopup(nameCountry);
+                    showSearchResult(nameCountry);
                 }
             });
             mapGroup.getChildren().add(svgPath);
@@ -141,66 +171,65 @@ public class MapSearchPage extends BorderPane {
         });
     }
 
-    private void initComponents() {
-        try {
-            String path = System.getProperty("user.dir") + "/src/main/resources/data/world.svg";
-            map = loadSvgMap(path);
 
-            mapTooltip = new Label("");
-            mapTooltip.setStyle(
-                    "-fx-background-color: rgba(30, 30, 30, 0.85);" +
-                            "-fx-text-fill: white;" +
-                            "-fx-padding: 5px 10px;" +
-                            "-fx-background-radius: 5px;" +
-                            "-fx-font-weight: bold;"
-            );
-            mapTooltip.setMouseTransparent(true);
-            mapTooltip.setVisible(false);
 
-        } catch (Exception e) {
-            System.err.println("Error load map: " + e.getMessage());
-            e.printStackTrace();
-        }
-    }
-
-    private void buildLayout() {
-        mapContainer = new Pane();
-        mapContainer.getChildren().add(map);
-        mapContainer.getChildren().add(mapTooltip);
-        mapContainer.setStyle("-fx-background-color: #2196F3;");
-
-        Rectangle clip = new Rectangle();
-        clip.widthProperty().bind(mapContainer.widthProperty());
-        clip.heightProperty().bind(mapContainer.heightProperty());
-        mapContainer.setClip(clip);
-        enableZoomAndPan(mapContainer, map);
-
-        setCenter(mapContainer);
-    }
-
-    private void showCountryPopup(String countryName) {
-        Stage popup = new Stage();
-        popup.initModality(Modality.APPLICATION_MODAL);
-        if (getScene() != null && getScene().getWindow() != null) {
-            popup.initOwner(getScene().getWindow());
-        }
-        popup.setTitle("Country Search: " + countryName);
-
-        Label title = new Label(countryName);
-        title.setStyle("-fx-font-size: 20px; -fx-font-weight: bold;");
+    private void showSearchResult(String countryName) {
+        this.setBottom(null);
 
         SearchResultPane resultPane = searchEnginePage.createResultPane();
-        resultPane.setText("Searching...");
 
-        BorderPane root = new BorderPane();
-        root.setTop(title);
-        root.setCenter(resultPane);
-        root.setPadding(new Insets(16));
-        BorderPane.setMargin(title, new Insets(0, 0, 12, 0));
+        HBox headerBox = new HBox(10);
+        headerBox.setAlignment(Pos.CENTER_LEFT);
+        headerBox.setPadding(new Insets(0, 16, 0, 16));
+        headerBox.setStyle("-fx-background-color: #f8fafc; -fx-border-color: #e2e8f0; -fx-border-width: 0 0 1 0;");
 
-        popup.setScene(new Scene(root, 760, 560));
-        popup.show();
+        Region spacer = new Region();
+        HBox.setHgrow(spacer, Priority.ALWAYS);
 
-        resultPane.search("country:" + countryName, "Searching...");
+        Button toggleButton = new Button("▼");
+        toggleButton.getStyleClass().add("toggle-and-close-button");
+        Button closeButton = new Button("✕");
+        closeButton.getStyleClass().add("toggle-and-close-button");
+
+        headerBox.getChildren().addAll(spacer, toggleButton, closeButton);
+
+        bottomContent = new VBox();
+        bottomContent.getChildren().add(resultPane);
+        bottomContent.setPadding(new Insets(10));
+
+        BorderPane bottomPanel = new BorderPane();
+        bottomPanel.setTop(headerBox);
+        bottomPanel.setCenter(bottomContent);
+        bottomPanel.setStyle("-fx-background-color: white; -fx-border-color: #e5e7eb; -fx-border-width: 1 0 0 0;");
+        bottomPanel.setPrefHeight(400);
+        bottomPanel.setMaxHeight(400);
+
+        toggleButton.setOnAction(e -> {
+            if (isExpanded) {
+                bottomPanel.setPrefHeight(50);
+                bottomPanel.setMaxHeight(50);
+                bottomContent.setVisible(false);
+                bottomContent.setManaged(false);
+                toggleButton.setText("▲");
+                isExpanded = false;
+            } else {
+                bottomPanel.setPrefHeight(400);
+                bottomPanel.setMaxHeight(400);
+                bottomContent.setVisible(true);
+                bottomContent.setManaged(true);
+                toggleButton.setText("▼");
+                isExpanded = true;
+            }
+        });
+
+        closeButton.setOnAction(e -> {
+            this.setBottom(null);
+            isExpanded = true;
+        });
+
+        this.setBottom(bottomPanel);
+
+        resultPane.search("country:" + countryName, "Searching for " + countryName + "...");
+
     }
 }

@@ -23,6 +23,7 @@
     -fx-text-fill: #00AEEF;
 }
 
+/*The style of each component by SearchEnginePage*/
 .cbb-style {
     -fx-background-color: black;
     -fx-border-color: #00AEEF;
@@ -30,4 +31,49 @@
     -fx-background-radius: 10;
     -fx-padding: 4 10;
     -fx-font-size: 12px;
+}
+
+.txt-search-style {
+    -fx-background-color: black;
+    -fx-text-fill: white;
+    -fx-prompt-text-fill: #888888;
+    -fx-border-color: transparent;
+    -fx-background-radius: 12;
+    -fx-background-insets: 0;
+    -fx-border-width: 0;
+}
+
+.search-box-style {
+    -fx-background-color: black;
+    -fx-border-radius: 12;
+    -fx-border-color: #00AEEF;
+    -fx-padding: 0 3;
+    -fx-background-radius: 14;
+}
+
+/*The style of each component by MapSearchPage*/
+.map-tooltip-style {
+    -fx-background-color: rgba(30, 30, 30, 0.85);
+    -fx-text-fill: white;
+    -fx-padding: 5px 10px;
+    -fx-background-radius: 5px;
+    -fx-font-weight: bold;
+}
+
+.toggle-and-close-button {
+    -fx-background-color: transparent;
+    -fx-text-fill: #6b7280;
+    -fx-font-size: 18px;
+    -fx-font-weight: bold;
+    -fx-cursor: hand;
+}
+
+/*The style of each component by SearchRésultPane*/
+.message-label-style {
+    -fx-background-color: #f8fafc;
+    -fx-padding: 20;
+    -fx-font-family: "Arial Narrow";
+    -fx-text-fill: #9ca3af;
+    -fx-font-size: 40px;
+    -fx-background-radius: 40;
 }

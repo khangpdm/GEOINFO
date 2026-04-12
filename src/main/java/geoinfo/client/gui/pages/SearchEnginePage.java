@@ -37,15 +37,7 @@ public class SearchEnginePage extends BorderPane {
         txtSearch = new TextField();
         txtSearch.setPromptText("Enter the keyword to search ...");
         txtSearch.setPrefHeight(Consts.SEARCHBAR_ITEM_HEIGHT);
-        txtSearch.setStyle(
-                "-fx-background-color: black;" +
-                        "-fx-text-fill: white;" +
-                        "-fx-prompt-text-fill: #888888;" +
-                        "-fx-border-color: transparent;" +
-                        "-fx-background-radius: 12;" +
-                        "-fx-background-insets: 0;" +
-                        "-fx-border-width: 0;"
-        );
+        txtSearch.getStyleClass().add("txt-search-style");
         txtSearch.setOnAction(event -> search());
 
         searchIcon = new ImageView(new Image(getClass().getResourceAsStream("/images/icons/search_white.png")));
@@ -74,13 +66,7 @@ public class SearchEnginePage extends BorderPane {
         searchIcon.setOnMouseClicked(event -> search());
 
         HBox searchBox = new HBox(0);
-        searchBox.setStyle(
-                "-fx-background-color: black;" +
-                        "-fx-border-radius: 12;" +
-                        "-fx-border-color: #00AEEF;" +
-                        "-fx-padding: 0 3;" +
-                        "-fx-background-radius: 14;"
-        );
+        searchBox.getStyleClass().add("search-box-style");
         HBox.setHgrow(txtSearch, Priority.ALWAYS);
 
         StackPane iconWrapper = new StackPane(searchIcon);
@@ -100,9 +86,9 @@ public class SearchEnginePage extends BorderPane {
         pnlContent.setTop(lblContent);
         pnlContent.setCenter(resultPane);
 
-        setTop(searchBar);
-        setStyle("-fx-background-color: white;");
-        setCenter(pnlContent);
+        this.setTop(searchBar);
+        this.setStyle("-fx-background-color: white;");
+        this.setCenter(pnlContent);
     }
 
     private void search() {

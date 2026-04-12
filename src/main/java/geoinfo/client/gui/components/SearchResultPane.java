@@ -30,11 +30,11 @@ public class SearchResultPane extends VBox {
     private final AtomicLong latestRequestId = new AtomicLong();
     private final ClientService clientService;
 
-    private final ImageView flagPreview;
-    private final Label titleLabel;
-    private final Button moreInfoButton;
-    private final VBox resultContainer;
-    private final ScrollPane resultScrollPane;
+    private ImageView flagPreview;
+    private Label titleLabel;
+    private Button moreInfoButton;
+    private VBox resultContainer;
+    private ScrollPane resultScrollPane;
 
     private String pendingMoreInfoRequest;
     private String loadedMoreInfoRequest;
@@ -47,7 +47,11 @@ public class SearchResultPane extends VBox {
 
     public SearchResultPane(ClientService clientService) {
         this.clientService = clientService;
+        initComponent();
+        buildLayout();
+    }
 
+    private void initComponent(){
         flagPreview = new ImageView();
         flagPreview.setFitHeight(36);
         flagPreview.setFitWidth(54);
@@ -60,31 +64,36 @@ public class SearchResultPane extends VBox {
         titleLabel.setVisible(false);
         titleLabel.setManaged(false);
 
-        moreInfoButton = new Button("Them thong tin");
+        moreInfoButton = new Button("See More Information");
         moreInfoButton.setVisible(false);
         moreInfoButton.setManaged(false);
         moreInfoButton.setDisable(true);
         moreInfoButton.setOnAction(event -> fetchMoreInfo());
 
+        resultContainer = new VBox(12);
+        resultContainer.setPadding(new Insets(12));
+        resultContainer.setStyle("-fx-background-color: white;");
+
+        resultScrollPane = new ScrollPane(resultContainer);
+        resultScrollPane.setFitToWidth(true);
+        resultScrollPane.setFitToHeight(true);
+        resultScrollPane.setHbarPolicy(ScrollPane.ScrollBarPolicy.NEVER);
+        resultScrollPane.setVbarPolicy(ScrollPane.ScrollBarPolicy.NEVER);
+        resultScrollPane.setStyle("-fx-background: white; -fx-background-color: white;");
+    }
+
+    private void buildLayout() {
         Region spacer = new Region();
         HBox.setHgrow(spacer, Priority.ALWAYS);
 
         HBox headerBar = new HBox(12, flagPreview, titleLabel, spacer, moreInfoButton);
         headerBar.setAlignment(Pos.CENTER_LEFT);
 
-        resultContainer = new VBox(12);
-        resultContainer.setPadding(new Insets(12));
-        resultContainer.setFillWidth(true);
-        resultContainer.setStyle("-fx-background-color: white;");
-
-        resultScrollPane = new ScrollPane(resultContainer);
-        resultScrollPane.setFitToWidth(true);
-        resultScrollPane.setHbarPolicy(ScrollPane.ScrollBarPolicy.NEVER);
-        resultScrollPane.setStyle("-fx-background: white; -fx-background-color: white;");
-
-        setSpacing(12);
-        getChildren().addAll(headerBar, resultScrollPane);
+        this.setSpacing(12);
+        this.getChildren().addAll(headerBar, resultScrollPane);
         VBox.setVgrow(resultScrollPane, Priority.ALWAYS);
+
+        this.setFillWidth(true);
     }
 
     public void setText(String text) {
@@ -135,7 +144,7 @@ public class SearchResultPane extends VBox {
         if (cachedMoreInfo != null) {
             renderResponse(cachedMoreInfo.toString(), true);
             loadedMoreInfoRequest = request;
-            moreInfoButton.setText("Da them thong tin");
+            moreInfoButton.setText("Information has been added");
             moreInfoButton.setDisable(true);
             return;
         }
@@ -143,7 +152,7 @@ public class SearchResultPane extends VBox {
         // === THÊM: Nếu đang loading thì chờ ===
         if (isLoadingMoreInfo) {
             moreInfoButton.setDisable(true);
-            moreInfoButton.setText("Dang tai...");
+            moreInfoButton.setText("Information is being loaded...");
 
             // Poll chờ cache sẵn sàng
             SEARCH_EXECUTOR.submit(() -> {
@@ -551,16 +560,10 @@ public class SearchResultPane extends VBox {
 
         Label messageLabel = new Label(message == null ? "" : message.trim());
         messageLabel.setWrapText(true);
-        messageLabel.setMaxWidth(Double.MAX_VALUE);
-        messageLabel.setAlignment(Pos.CENTER_LEFT);
-        messageLabel.setStyle(
-                "-fx-background-color: #f8fafc;" +
-                        "-fx-border-color: #cbd5e1;" +
-                        "-fx-border-radius: 8;" +
-                        "-fx-background-radius: 8;" +
-                        "-fx-padding: 16;" +
-                        "-fx-text-fill: #111827;"
-        );
+        messageLabel.setMaxSize(Double.MAX_VALUE, Double.MAX_VALUE);
+        messageLabel.setAlignment(Pos.CENTER);
+        messageLabel.getStyleClass().add("message-label-style");
+        VBox.setVgrow(messageLabel, Priority.ALWAYS);
         resultContainer.getChildren().add(messageLabel);
     }
 
@@ -570,16 +573,10 @@ public class SearchResultPane extends VBox {
         }
         Label messageLabel = new Label(message.trim());
         messageLabel.setWrapText(true);
-        messageLabel.setMaxWidth(Double.MAX_VALUE);
-        messageLabel.setAlignment(Pos.CENTER_LEFT);
-        messageLabel.setStyle(
-                "-fx-background-color: #f8fafc;" +
-                        "-fx-border-color: #cbd5e1;" +
-                        "-fx-border-radius: 8;" +
-                        "-fx-background-radius: 8;" +
-                        "-fx-padding: 16;" +
-                        "-fx-text-fill: #111827;"
-        );
+        messageLabel.setMaxSize(Double.MAX_VALUE, Double.MAX_VALUE);
+        messageLabel.setAlignment(Pos.CENTER);
+        messageLabel.getStyleClass().add("message-label-style");
+        VBox.setVgrow(messageLabel, Priority.ALWAYS);
         resultContainer.getChildren().add(messageLabel);
     }
 
