@@ -2,11 +2,18 @@ package geoinfo.client.gui.components;
 
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
+
 import javafx.scene.control.Label;
+import javafx.scene.control.TextField;
+import javafx.scene.input.Clipboard;
+import javafx.scene.input.ClipboardContent;
+import javafx.scene.input.MouseButton;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.Priority;
 import javafx.scene.layout.VBox;
 
+import java.awt.Desktop;
+import java.net.URI;
 import java.util.List;
 
 public class MTable extends VBox {
@@ -17,11 +24,7 @@ public class MTable extends VBox {
     public MTable() {
         setSpacing(0);
         setFillWidth(true);
-        setStyle(
-                "-fx-background-color: white;" +
-                "-fx-border-color: #dbe7f3;" +
-                "-fx-background-radius: 10;"
-        );
+        setStyle("-fx-background-color: white;");
     }
 
     public void setRows(List<RowData> rows) {
@@ -40,23 +43,24 @@ public class MTable extends VBox {
         Label fieldLabel = new Label(safeText(row.field()));
         fieldLabel.setWrapText(true);
         fieldLabel.setMaxWidth(Double.MAX_VALUE);
-        fieldLabel.setStyle(
-                "-fx-text-fill: #00AEEF;" +
-                "-fx-font-weight: bold;" +
-                "-fx-font-size: 13px;"
-        );
+        fieldLabel.getStyleClass().add("field-label-style");
 
-        Label valueLabel = new Label(safeText(row.value()));
-        valueLabel.setWrapText(true);
-        valueLabel.setMaxWidth(Double.MAX_VALUE);
-        valueLabel.setStyle(
-                "-fx-text-fill: #6b7280;" +
-                "-fx-font-size: 13px;"
-        );
+        String text = safeText(row.value());
+        TextField valueField = new TextField(text);
+        valueField.setPadding(new Insets(0));
+        valueField.setEditable(false);
+        valueField.setFocusTraversable(false);
 
-        HBox rowBox = new HBox(18, fieldLabel, valueLabel);
+        if (isUrl(text)) {
+            valueField.getStyleClass().add("value-field-is-url-style");
+        } else {
+            valueField.getStyleClass().add("value-field-normal-style");
+        }
+        addTextFieldSupport(valueField, text);
+
+        HBox rowBox = new HBox(18, fieldLabel, valueField);
         rowBox.setAlignment(Pos.TOP_LEFT);
-        rowBox.setPadding(new Insets(12, 16, 12, 16));
+        rowBox.setPadding(new Insets(12, 0, 12, 0));
         rowBox.setFillHeight(true);
         rowBox.setStyle(
                 "-fx-background-color: white;" +
@@ -65,9 +69,43 @@ public class MTable extends VBox {
 
         fieldLabel.setPrefWidth(220);
         fieldLabel.setMinWidth(220);
-        HBox.setHgrow(valueLabel, Priority.ALWAYS);
+        HBox.setHgrow(valueField, Priority.ALWAYS);
 
         return rowBox;
+    }
+
+    private void addTextFieldSupport(TextField textField, String text) {
+        if (isUrl(text)) {
+            textField.setOnMouseClicked(event -> {
+                if (event.getButton() == MouseButton.PRIMARY && event.isControlDown()) {
+                    openUrl(text);
+                    event.consume();
+                }
+            });
+        }
+    }
+
+    private boolean isUrl(String text) {
+        if (text == null || text.isBlank()) return false;
+        String lowerText = text.toLowerCase().trim();
+        return lowerText.startsWith("http://") || lowerText.startsWith("https://") || lowerText.startsWith("www.");
+    }
+
+    private void openUrl(String url) {
+        try {
+            if (!url.startsWith("http")) {
+                url = "https://" + url;
+            }
+            Desktop.getDesktop().browse(new URI(url));
+        } catch (Exception e) {
+            System.err.println("Cannot open link: " + url);
+        }
+    }
+
+    private void copyToClipboard(String text) {
+        ClipboardContent content = new ClipboardContent();
+        content.putString(text);
+        Clipboard.getSystemClipboard().setContent(content);
     }
 
     private String safeText(String value) {

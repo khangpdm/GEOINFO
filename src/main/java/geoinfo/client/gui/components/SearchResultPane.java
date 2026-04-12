@@ -60,7 +60,7 @@ public class SearchResultPane extends VBox {
         flagPreview.setManaged(false);
 
         titleLabel = new Label("");
-        titleLabel.setStyle("-fx-font-size: 18px; -fx-font-weight: bold; -fx-text-fill: #111111;");
+        titleLabel.getStyleClass().add("title-label-style");
         titleLabel.setVisible(false);
         titleLabel.setManaged(false);
 
@@ -395,7 +395,7 @@ public class SearchResultPane extends VBox {
 
             if (array.length() > 1) {
                 Label itemLabel = new Label(title + " " + (i + 1));
-                itemLabel.setStyle("-fx-font-size: 13px; -fx-font-weight: bold; -fx-text-fill: #1f2937;");
+                itemLabel.setStyle("-fx-font-size: 13px; -fx-font-weight: bold; -fx-text-fill: #1f2937; ");
                 sectionBox.getChildren().add(itemLabel);
             }
 

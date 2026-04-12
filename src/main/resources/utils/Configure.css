@@ -77,3 +77,34 @@
     -fx-font-size: 40px;
     -fx-background-radius: 40;
 }
+
+.title-label-style {
+    -fx-font-size: 24px;
+    -fx-font-weight: bold;
+    -fx-text-fill: #111111;
+    -fx-font-family: "Arial Narrow";
+}
+
+/*The style of each component by MTable*/
+.field-label-style {
+    -fx-text-fill: #00AEEF;
+    -fx-font-weight: bold;
+    -fx-font-size: 15px;
+}
+
+.value-field-normal-style {
+    -fx-background-color: transparent;
+    -fx-border-color: transparent;
+    -fx-text-fill: #6b7280;
+    -fx-font-size: 13px;
+    -fx-cursor: text;
+}
+
+.value-field-is-url-style {
+    -fx-background-color: transparent;
+    -fx-border-color: transparent;
+    -fx-text-fill: #2563eb;
+    -fx-font-size: 13px;
+    -fx-underline: true;
+    -fx-cursor: hand;
+}
