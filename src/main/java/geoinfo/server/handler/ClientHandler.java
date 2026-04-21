@@ -49,44 +49,44 @@ public class ClientHandler {
 
     private static String describeClientAction(String rawInput) {
         if (rawInput == null) {
-            return "Client gửi dữ liệu rỗng";
+            return "Client sent null data";
         }
 
         String normalizedInput = rawInput.trim();
         if (normalizedInput.isEmpty()) {
-            return "Client gửi dữ liệu rỗng";
+            return "Client sent empty data";
         }
 
         String lowerInput = normalizedInput.toLowerCase();
         if (lowerInput.equals("bye")) {
-            return "Client kết thúc phiên làm việc";
+            return "Client terminated the session";
         }
         if (lowerInput.equals("reloadcountry")) {
-            return "Client yêu cầu tải lại dữ liệu quốc gia";
+            return "Client requested country data reload";
         }
         if (lowerInput.startsWith("country-more:")) {
-            return "Client xem thêm thông tin quốc gia: " + extractKeyword(normalizedInput);
+            return "Client viewed country details: " + extractKeyword(normalizedInput);
         }
         if (lowerInput.startsWith("city-more:")) {
-            return "Client xem thêm thông tin thành phố: " + extractKeyword(normalizedInput);
+            return "Client viewed city details: " + extractKeyword(normalizedInput);
         }
         if (lowerInput.startsWith("country:")) {
-            return "Client tìm kiếm quốc gia: " + extractKeyword(normalizedInput);
+            return "Client searched for country: " + extractKeyword(normalizedInput);
         }
         if (lowerInput.startsWith("city:")) {
-            return "Client tìm kiếm thành phố: " + extractKeyword(normalizedInput);
+            return "Client searched for city: " + extractKeyword(normalizedInput);
         }
 
-        return "Client tìm kiếm: " + normalizedInput;
+        return "Client searched for: " + normalizedInput;
     }
 
     private static String extractKeyword(String request) {
         int delimiterIndex = request.indexOf(':');
         if (delimiterIndex < 0 || delimiterIndex == request.length() - 1) {
-            return "(trống)";
+            return "(empty)";
         }
         String keyword = request.substring(delimiterIndex + 1).trim();
-        return keyword.isEmpty() ? "(trống)" : keyword;
+        return keyword.isEmpty() ? "(empty)" : keyword;
     }
 
     private static void logInfo(Socket socket, String message) {

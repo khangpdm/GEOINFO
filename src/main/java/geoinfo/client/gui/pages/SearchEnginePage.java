@@ -1,7 +1,6 @@
 package geoinfo.client.gui.pages;
 
 import geoinfo.client.gui.components.SearchResultPane;
-import geoinfo.client.gui.utils.Configure;
 import geoinfo.client.gui.utils.Consts;
 import geoinfo.client.network.ClientService;
 import geoinfo.server.utils.ValidationUtils;
@@ -54,11 +53,24 @@ public class SearchEnginePage extends BorderPane {
             protected void updateItem(String item, boolean empty) {
                 super.updateItem(item, empty);
                 setText(empty ? null : item);
-                setStyle("-fx-text-fill: white; -fx-background-color: black;");
+                if (!getStyleClass().contains("cbb-display-cell")) {
+                    getStyleClass().add("cbb-display-cell");
+                }
+            }
+        });
+        cbbType.setCellFactory(listView -> new ListCell<>() {
+            @Override
+            protected void updateItem(String item, boolean empty) {
+                super.updateItem(item, empty);
+                setText(empty ? null : item);
+                if (!getStyleClass().contains("cbb-popup-cell")) {
+                    getStyleClass().add("cbb-popup-cell");
+                }
             }
         });
 
         pnlContent = new BorderPane();
+        pnlContent.getStyleClass().add("search-content-panel");
     }
 
     private void buildLayout() {
@@ -79,15 +91,14 @@ public class SearchEnginePage extends BorderPane {
         searchBar.getChildren().addAll(searchBox, cbbType);
         HBox.setHgrow(searchBox, Priority.ALWAYS);
 
-        BorderPane.setMargin(pnlContent, new Insets(10, 15, 50, 15));
-        Label lblContent = new Label("Searched Information Results");
-        lblContent.setFont(Configure.FONT_TITLE_SEARCH_CONTENT);
-        lblContent.setPadding(new Insets(0, 0, 15, 0));
+        BorderPane.setMargin(pnlContent, new Insets(12, 15, 12, 15));
+        Label lblContent = new Label("Search Results");
+        lblContent.getStyleClass().add("search-content-title");
         pnlContent.setTop(lblContent);
         pnlContent.setCenter(resultPane);
 
         this.setTop(searchBar);
-        this.setStyle("-fx-background-color: white;");
+        this.getStyleClass().add("search-page");
         this.setCenter(pnlContent);
     }
 
