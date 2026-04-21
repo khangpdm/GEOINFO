@@ -4,6 +4,7 @@ import geoinfo.client.gui.components.SearchResultPane;
 import javafx.geometry.Insets;
 import javafx.geometry.Point2D;
 import javafx.geometry.Pos;
+import javafx.scene.Cursor;
 import javafx.scene.Group;
 import javafx.scene.control.Button;
 import javafx.scene.control.Label;
@@ -20,9 +21,14 @@ import javax.xml.parsers.DocumentBuilderFactory;
 import java.io.File;
 
 public class MapSearchPage extends BorderPane {
+    private static final double RESULT_MIN_HEIGHT = 120;
+    private static final double RESULT_COLLAPSED_HEIGHT = 50;
+    private static final double RESULT_DEFAULT_HEIGHT = 400;
+
     private final SearchEnginePage searchEnginePage;
     private VBox bottomContent;
     private boolean isExpanded = true;
+    private double lastExpandedHeight = RESULT_DEFAULT_HEIGHT;
     private Label mapTooltip;
     private Group map;
     private Pane mapContainer;
@@ -178,6 +184,11 @@ public class MapSearchPage extends BorderPane {
 
         SearchResultPane resultPane = searchEnginePage.createResultPane();
 
+        Region resizeHandle = new Region();
+        resizeHandle.getStyleClass().add("map-result-resize-handle");
+        resizeHandle.setPrefHeight(7);
+        resizeHandle.setCursor(Cursor.N_RESIZE);
+
         HBox headerBox = new HBox(10);
         headerBox.setAlignment(Pos.CENTER_LEFT);
         headerBox.setPadding(new Insets(0, 16, 0, 16));
@@ -197,24 +208,47 @@ public class MapSearchPage extends BorderPane {
         bottomContent.getChildren().add(resultPane);
         bottomContent.setPadding(new Insets(10));
 
+        VBox panelTop = new VBox(resizeHandle, headerBox);
         BorderPane bottomPanel = new BorderPane();
-        bottomPanel.setTop(headerBox);
+        bottomPanel.setTop(panelTop);
         bottomPanel.setCenter(bottomContent);
         bottomPanel.setStyle("-fx-background-color: white; -fx-border-color: #e5e7eb; -fx-border-width: 1 0 0 0;");
-        bottomPanel.setPrefHeight(400);
-        bottomPanel.setMaxHeight(400);
+        bottomPanel.setPrefHeight(lastExpandedHeight);
+        bottomPanel.setMaxHeight(lastExpandedHeight);
+
+        final double[] dragAnchorY = new double[1];
+        final double[] dragStartHeight = new double[1];
+        resizeHandle.setOnMousePressed(event -> {
+            dragAnchorY[0] = event.getSceneY();
+            dragStartHeight[0] = bottomPanel.getPrefHeight();
+        });
+        resizeHandle.setOnMouseDragged(event -> {
+            double dragDelta = dragAnchorY[0] - event.getSceneY();
+            double candidateHeight = dragStartHeight[0] + dragDelta;
+            double maxHeight = Math.max(RESULT_MIN_HEIGHT + 100, this.getHeight() - 80);
+            double nextHeight = Math.max(RESULT_MIN_HEIGHT, Math.min(candidateHeight, maxHeight));
+
+            bottomPanel.setPrefHeight(nextHeight);
+            bottomPanel.setMaxHeight(nextHeight);
+            lastExpandedHeight = nextHeight;
+            bottomContent.setVisible(true);
+            bottomContent.setManaged(true);
+            toggleButton.setText("▼");
+            isExpanded = true;
+        });
 
         toggleButton.setOnAction(e -> {
             if (isExpanded) {
-                bottomPanel.setPrefHeight(50);
-                bottomPanel.setMaxHeight(50);
+                lastExpandedHeight = bottomPanel.getPrefHeight();
+                bottomPanel.setPrefHeight(RESULT_COLLAPSED_HEIGHT);
+                bottomPanel.setMaxHeight(RESULT_COLLAPSED_HEIGHT);
                 bottomContent.setVisible(false);
                 bottomContent.setManaged(false);
                 toggleButton.setText("▲");
                 isExpanded = false;
             } else {
-                bottomPanel.setPrefHeight(400);
-                bottomPanel.setMaxHeight(400);
+                bottomPanel.setPrefHeight(lastExpandedHeight);
+                bottomPanel.setMaxHeight(lastExpandedHeight);
                 bottomContent.setVisible(true);
                 bottomContent.setManaged(true);
                 toggleButton.setText("▼");

@@ -38,15 +38,22 @@ public class Client extends Application {
 
         MButton title = new MButton("Geographic Information System", "/images/logo/globe.png", 22, 22);
         title.getStyleClass().add("m-button-title");
+        header.getStyleClass().add("app-header");
         header.setBackground(Configure.PRIMARY_BACKGROUND);
-        header.setPadding(new Insets(10, 20, 10, 20));
+        header.setPadding(new Insets(14, 28, 14, 28));
         header.getChildren().add(title);
 
         MButton btnSearchPage = new MButton("Search Engine", "");
         MButton btnMapPage = new MButton("Map Search", "");
+        btnSearchPage.getStyleClass().add("nav-button");
+        btnMapPage.getStyleClass().add("nav-button");
+        btnSearchPage.setMaxWidth(Double.MAX_VALUE);
+        btnMapPage.setMaxWidth(Double.MAX_VALUE);
 
-        leftMenu.setSpacing(10);
-        leftMenu.setPadding(new Insets(50, 20, 50, 40));
+        leftMenu.getStyleClass().add("app-side-menu");
+        leftMenu.setSpacing(12);
+        leftMenu.setPadding(new Insets(32, 18, 32, 18));
+        leftMenu.setFillWidth(true);
         leftMenu.getChildren().addAll(btnSearchPage, btnMapPage);
         leftMenu.setPrefWidth(Consts.APP_DEFAULT_WIDTH - Consts.CONTENT_DEFAULT_WIDTH);
         leftMenu.setBackground(Configure.SECONDARY_BACKGROUND);
@@ -55,14 +62,16 @@ public class Client extends Application {
         btnMapPage.setOnAction(e -> content.setCenter(mapSearchPage));
 
         content.setCenter(searchEnginePage);
-        content.setPadding(new Insets(50, 40, 50, 20));
+        content.getStyleClass().add("app-content");
+        content.setPadding(new Insets(26, 24, 24, 16));
 
         mainLayout.setTop(header);
         mainLayout.setCenter(content);
         mainLayout.setLeft(leftMenu);
+        mainLayout.getStyleClass().add("app-root");
         mainLayout.setBackground(Configure.SECONDARY_BACKGROUND);
 
-        Scene scene = new Scene(mainLayout, 1300, 700);
+        Scene scene = new Scene(mainLayout, Consts.APP_DEFAULT_WIDTH, Consts.APP_DEFAULT_HEIGHT);
         scene.getStylesheets().add(getClass().getResource("/utils/Configure.css").toExternalForm());
         stage.setScene(scene);
         stage.setTitle("Geo Info");

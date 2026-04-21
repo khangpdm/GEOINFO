@@ -65,6 +65,7 @@ public class SearchResultPane extends VBox {
         titleLabel.setManaged(false);
 
         moreInfoButton = new Button("See More Information");
+        moreInfoButton.getStyleClass().add("more-info-button");
         moreInfoButton.setVisible(false);
         moreInfoButton.setManaged(false);
         moreInfoButton.setDisable(true);
@@ -72,14 +73,14 @@ public class SearchResultPane extends VBox {
 
         resultContainer = new VBox(12);
         resultContainer.setPadding(new Insets(12));
-        resultContainer.setStyle("-fx-background-color: white;");
+        resultContainer.getStyleClass().add("result-container");
 
         resultScrollPane = new ScrollPane(resultContainer);
         resultScrollPane.setFitToWidth(true);
         resultScrollPane.setFitToHeight(true);
         resultScrollPane.setHbarPolicy(ScrollPane.ScrollBarPolicy.NEVER);
         resultScrollPane.setVbarPolicy(ScrollPane.ScrollBarPolicy.NEVER);
-        resultScrollPane.setStyle("-fx-background: white; -fx-background-color: white;");
+        resultScrollPane.getStyleClass().add("result-scroll");
     }
     // 1.2. Sắp xếp bố cục các thành phần
     private void buildLayout() {
@@ -87,6 +88,7 @@ public class SearchResultPane extends VBox {
         HBox.setHgrow(spacer, Priority.ALWAYS);
 
         HBox headerBar = new HBox(12, flagPreview, titleLabel, spacer, moreInfoButton);
+        headerBar.getStyleClass().add("result-header");
         headerBar.setAlignment(Pos.CENTER_LEFT);
 
         this.setSpacing(12);
@@ -514,7 +516,7 @@ public class SearchResultPane extends VBox {
 
     private Label createSectionLabel(String title) {
         Label sectionLabel = new Label(title);
-        sectionLabel.setStyle("-fx-font-size: 15px; -fx-font-weight: bold; -fx-text-fill: #0f172a;");
+        sectionLabel.getStyleClass().add("result-section-title");
         return sectionLabel;
     }
 
