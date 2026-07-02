@@ -16,8 +16,6 @@ Dự án phục vụ môn Lập trình mạng, tập trung vào các nội dung:
 
 https://github.com/user-attachments/assets/2964810e-673c-42bd-ac0e-e30fc6f6098b
 
-[![Watch the video](https://img.youtube.com/vi/3sdEZ9LCRaM/0.jpg)](https://www.youtube.com/watch?v=3sdEZ9LCRaM)
-
 ## Chức năng chính
 
 ### 1. Tra cứu thành phố
