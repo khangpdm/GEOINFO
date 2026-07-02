@@ -14,7 +14,7 @@ Dự án phục vụ môn Lập trình mạng, tập trung vào các nội dung:
 
 ##  Demo
 
-https://github.com/user-attachments/assets/b4941e60-6d18-457c-90e7-4fb3defa1e6d
+[https://github.com/user-attachments/assets/b4941e60-6d18-457c-90e7-4fb3defa1e6d](https://github-production-user-asset-6210df.s3.amazonaws.com/183804070/616246354-b4941e60-6d18-457c-90e7-4fb3defa1e6d.mp4?X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Credential=AKIAVCODYLSA53PQK4ZA%2F20260702%2Fus-east-1%2Fs3%2Faws4_request&X-Amz-Date=20260702T103209Z&X-Amz-Expires=300&X-Amz-Signature=3489fa88af4fb50a318fb999d60375130fee8a3d5370fb792bc799d610d85d3b&X-Amz-SignedHeaders=host&response-content-type=video%2Fmp4)
 [![Watch the video](https://img.youtube.com/vi/3sdEZ9LCRaM/0.jpg)](https://www.youtube.com/watch?v=3sdEZ9LCRaM)
 
 ## Chức năng chính
