@@ -14,6 +14,7 @@ Dự án phục vụ môn Lập trình mạng, tập trung vào các nội dung:
 
 ##  Demo
 
+https://github.com/user-attachments/assets/b4941e60-6d18-457c-90e7-4fb3defa1e6d
 [![Watch the video](https://img.youtube.com/vi/3sdEZ9LCRaM/0.jpg)](https://www.youtube.com/watch?v=3sdEZ9LCRaM)
 
 ## Chức năng chính
